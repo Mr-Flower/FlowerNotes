@@ -9,7 +9,11 @@ import android.speech.SpeechRecognizer
 
 /**
  * Wrapper del SpeechRecognizer nativo di Android.
- * Espone callback semplici per la UI (parziali, risultato, errore).
+ *
+ * L'istanza viene riusata tra un ascolto e l'altro: distruggere e ricreare il
+ * recognizer a ogni avvio causava ERROR_SERVER_DISCONNECTED (codice 11) su
+ * alcuni dispositivi. In più, se il servizio si disconnette comunque, viene
+ * ricreato e riavviato una volta in automatico prima di mostrare l'errore.
  */
 class SpeechRecognizerManager(
     private val context: Context,
@@ -18,53 +22,75 @@ class SpeechRecognizerManager(
     private val onError: (String) -> Unit,
 ) {
     private var recognizer: SpeechRecognizer? = null
+    private var retriedAfterDisconnect = false
 
     fun isAvailable(): Boolean = SpeechRecognizer.isRecognitionAvailable(context)
 
     fun start() {
+        retriedAfterDisconnect = false
+        startInternal()
+    }
+
+    private fun startInternal() {
         if (!isAvailable()) {
             onError("Riconoscimento vocale non disponibile su questo dispositivo")
             return
         }
-        stop()
-        recognizer = SpeechRecognizer.createSpeechRecognizer(context).also { r ->
-            r.setRecognitionListener(object : RecognitionListener {
-                override fun onReadyForSpeech(params: Bundle?) {}
-                override fun onBeginningOfSpeech() {}
-                override fun onRmsChanged(rmsdB: Float) {}
-                override fun onBufferReceived(buffer: ByteArray?) {}
-                override fun onEndOfSpeech() {}
-                override fun onEvent(eventType: Int, params: Bundle?) {}
-
-                override fun onPartialResults(partialResults: Bundle?) {
-                    partialResults
-                        ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                        ?.firstOrNull()
-                        ?.let(onPartial)
-                }
-
-                override fun onResults(results: Bundle?) {
-                    val text = results
-                        ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                        ?.firstOrNull()
-                    if (text.isNullOrBlank()) {
-                        onError("Non ho capito, riprova")
-                    } else {
-                        onResult(text)
-                    }
-                }
-
-                override fun onError(error: Int) {
-                    onError(errorMessage(error))
-                }
-            })
-            r.startListening(buildIntent())
+        val r = recognizer ?: SpeechRecognizer.createSpeechRecognizer(context).also {
+            it.setRecognitionListener(listener)
+            recognizer = it
         }
+        r.startListening(buildIntent())
     }
 
-    fun stop() {
+    /** Interrompe l'ascolto in corso senza distruggere il recognizer */
+    fun cancel() {
+        recognizer?.cancel()
+    }
+
+    /** Da chiamare solo quando il ViewModel viene distrutto */
+    fun destroy() {
         recognizer?.destroy()
         recognizer = null
+    }
+
+    private val listener = object : RecognitionListener {
+        override fun onReadyForSpeech(params: Bundle?) {}
+        override fun onBeginningOfSpeech() {}
+        override fun onRmsChanged(rmsdB: Float) {}
+        override fun onBufferReceived(buffer: ByteArray?) {}
+        override fun onEndOfSpeech() {}
+        override fun onEvent(eventType: Int, params: Bundle?) {}
+
+        override fun onPartialResults(partialResults: Bundle?) {
+            partialResults
+                ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                ?.firstOrNull()
+                ?.let(onPartial)
+        }
+
+        override fun onResults(results: Bundle?) {
+            val text = results
+                ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                ?.firstOrNull()
+            if (text.isNullOrBlank()) {
+                onError("Non ho capito, riprova")
+            } else {
+                onResult(text)
+            }
+        }
+
+        override fun onError(error: Int) {
+            // Il servizio si è disconnesso: ricrea il recognizer e riprova una volta
+            if (error == SpeechRecognizer.ERROR_SERVER_DISCONNECTED && !retriedAfterDisconnect) {
+                retriedAfterDisconnect = true
+                recognizer?.destroy()
+                recognizer = null
+                startInternal()
+                return
+            }
+            this@SpeechRecognizerManager.onError(errorMessage(error))
+        }
     }
 
     private fun buildIntent() = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
@@ -82,6 +108,12 @@ class SpeechRecognizerManager(
         SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Errore di rete del riconoscimento vocale"
         SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Permesso microfono mancante"
         SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Riconoscimento occupato, riprova"
+        SpeechRecognizer.ERROR_TOO_MANY_REQUESTS -> "Troppe richieste, attendi un momento"
+        SpeechRecognizer.ERROR_SERVER_DISCONNECTED ->
+            "Il servizio di riconoscimento si è disconnesso, riprova"
+        SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED,
+        SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE ->
+            "Italiano non disponibile nel riconoscimento vocale del dispositivo"
         else -> "Errore del riconoscimento vocale (codice $code)"
     }
 }

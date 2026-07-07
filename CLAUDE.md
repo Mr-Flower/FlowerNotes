@@ -100,6 +100,9 @@ Unica implementazione: `GeminiProvider`. Il prompt condiviso è in `llm/Extracti
 - [x] Quick Settings Tile (apre l'app in modalità ascolto via EXTRA_START_LISTENING)
 - [x] Date/time picker Material 3 nella schermata di conferma
 - [x] Toggle colori dinamici Material You (default on; fallback palette rosa)
-- [x] Icona AMOLED: mic-fiore dentro una nota, sfondo nero, variante monochrome
+- [x] Icona AMOLED dal logo dell'utente (art/logo-reference.png): calendario +
+      tulipano-microfono, ridisegnata a vettori con variante monochrome
+- [x] SpeechRecognizer: istanza riusata + retry automatico su
+      ERROR_SERVER_DISCONNECTED (codice 11) — NON distruggere/ricreare a ogni avvio
 - [ ] Test end-to-end su telefono fisico (voce → LLM → calendario)
 - [ ] Google Calendar API v3 + OAuth (opzionale, per calendari non sul dispositivo)

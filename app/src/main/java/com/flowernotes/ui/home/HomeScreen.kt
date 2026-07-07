@@ -3,7 +3,9 @@ package com.flowernotes.ui.home
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.StartOffset
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.EventNote
@@ -40,7 +43,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -169,40 +173,63 @@ fun HomeScreen(
                 }
             }
 
-            // Microfono al centro esatto dello schermo, con "respiro" mentre ascolta
-            val pulse by rememberInfiniteTransition(label = "pulse").animateFloat(
-                initialValue = 1f,
-                targetValue = if (isListening) 1.12f else 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(600),
-                    repeatMode = RepeatMode.Reverse,
-                ),
-                label = "pulseScale",
-            )
-            FloatingActionButton(
-                onClick = {
-                    when {
-                        isListening -> viewModel.stopListening()
-                        isProcessing -> {}
-                        else -> micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                    }
-                },
+            // Microfono al centro esatto dello schermo. Mentre ascolta, dal
+            // pulsante si propagano onde concentriche che sfumano allargandosi.
+            val waveColor = MaterialTheme.colorScheme.primary
+            val waveTransition = rememberInfiniteTransition(label = "waves")
+            val waveProgress = List(3) { index ->
+                waveTransition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 1f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(2100, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart,
+                        initialStartOffset = StartOffset(index * 700),
+                    ),
+                    label = "wave$index",
+                )
+            }
+            Box(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .size(112.dp)
-                    .scale(if (isListening) pulse else 1f),
-                shape = RoundedCornerShape(32.dp),
-                containerColor = if (isListening) {
-                    MaterialTheme.colorScheme.errorContainer
-                } else {
-                    MaterialTheme.colorScheme.primaryContainer
-                },
+                    .size(140.dp)
+                    .drawBehind {
+                        if (isListening) {
+                            waveProgress.forEach { progress ->
+                                val p = progress.value
+                                drawCircle(
+                                    color = waveColor,
+                                    radius = size.minDimension / 2f * (1f + p * 0.9f),
+                                    alpha = (1f - p) * 0.4f,
+                                    style = Stroke(width = 3.dp.toPx()),
+                                )
+                            }
+                        }
+                    },
+                contentAlignment = Alignment.Center,
             ) {
-                Icon(
-                    if (isListening) Icons.Default.Stop else Icons.Default.Mic,
-                    contentDescription = if (isListening) "Ferma ascolto" else "Avvia ascolto",
-                    modifier = Modifier.size(48.dp),
-                )
+                FloatingActionButton(
+                    onClick = {
+                        when {
+                            isListening -> viewModel.stopListening()
+                            isProcessing -> {}
+                            else -> micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize(),
+                    shape = CircleShape,
+                    containerColor = if (isListening) {
+                        MaterialTheme.colorScheme.errorContainer
+                    } else {
+                        MaterialTheme.colorScheme.primaryContainer
+                    },
+                ) {
+                    Icon(
+                        if (isListening) Icons.Default.Stop else Icons.Default.Mic,
+                        contentDescription = if (isListening) "Ferma ascolto" else "Avvia ascolto",
+                        modifier = Modifier.size(56.dp),
+                    )
+                }
             }
 
             // Azioni secondarie in basso, stile quick tile di Android

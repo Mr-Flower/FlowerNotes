@@ -42,7 +42,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun stopListening() {
-        speech.stop()
+        speech.cancel()
         if (_uiState.value is HomeUiState.Listening) {
             _uiState.value = HomeUiState.Idle
         }
@@ -71,6 +71,6 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     override fun onCleared() {
-        speech.stop()
+        speech.destroy()
     }
 }
