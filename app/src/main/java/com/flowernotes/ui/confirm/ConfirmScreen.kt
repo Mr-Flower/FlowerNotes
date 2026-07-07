@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -98,16 +99,20 @@ fun ConfirmScreen(
                 CircularProgressIndicator()
             }
 
+            // Stessa larghezza (weight) e stessa altezza fissa: etichetta corta
+            // per evitare che "Salva sul calendario" vada su due righe
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 OutlinedButton(
                     onClick = onCancel,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
                     enabled = uiState !is ConfirmUiState.Saving,
                 ) {
-                    Text(strings.cancel)
+                    Text(strings.cancel, maxLines = 1)
                 }
                 Button(
                     onClick = {
@@ -124,10 +129,12 @@ fun ConfirmScreen(
                             viewModel.save() // save() mostrerà l'errore di validazione
                         }
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
                     enabled = uiState !is ConfirmUiState.Saving,
                 ) {
-                    Text(strings.saveToCalendar)
+                    Text(strings.saveButton, maxLines = 1)
                 }
             }
         }

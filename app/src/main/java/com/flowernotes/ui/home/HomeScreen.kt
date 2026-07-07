@@ -53,14 +53,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.flowernotes.R
 import com.flowernotes.data.EventoData
 import com.flowernotes.i18n.LocalStrings
 import kotlinx.coroutines.delay
@@ -132,20 +130,15 @@ fun HomeScreen(
                 .padding(padding)
                 .padding(horizontal = 24.dp),
         ) {
-            // Branding + stato nella fascia superiore, sopra il microfono
+            // In alto solo il nome dell'app con la didascalia
             Column(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Icon(
-                    painterResource(R.drawable.logo_artwork),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(84.dp),
-                )
                 Text(
                     "FlowerNotes",
                     style = MaterialTheme.typography.headlineLarge,
@@ -158,76 +151,10 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
-
-                Spacer(Modifier.height(12.dp))
-
-                when (val state = uiState) {
-                    is HomeUiState.Idle -> {
-                        Text(
-                            strings.homeInstruction,
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center,
-                        )
-                        AnimatedContent(
-                            targetState = examples[exampleIndex],
-                            transitionSpec = { fadeIn(tween(400)) togetherWith fadeOut(tween(400)) },
-                            label = "example",
-                        ) { example ->
-                            Text(
-                                "“$example”",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontStyle = FontStyle.Italic,
-                                color = MaterialTheme.colorScheme.primary,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-                    }
-                    is HomeUiState.Listening -> {
-                        Text(
-                            strings.listeningTitle,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            state.partialText,
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
-                    is HomeUiState.Processing -> {
-                        CircularProgressIndicator()
-                        Text(
-                            "“${state.recognizedText}”",
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center,
-                        )
-                        Text(
-                            strings.processingTitle,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    is HomeUiState.Extracted -> {
-                        CircularProgressIndicator()
-                    }
-                    is HomeUiState.Error -> {
-                        Text(
-                            state.message,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.error,
-                            textAlign = TextAlign.Center,
-                        )
-                        Text(
-                            strings.errorRetryHint,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
             }
 
-            // Microfono al centro. Mentre ascolta, onde concentriche che
-            // si propagano sfumando allargandosi.
+            // Microfono al centro, con i testi di stato subito sotto.
+            // Mentre ascolta, onde concentriche che si propagano sfumando.
             val waveColor = MaterialTheme.colorScheme.primary
             val waveTransition = rememberInfiniteTransition(label = "waves")
             val waveProgress = List(3) { index ->
@@ -242,50 +169,138 @@ fun HomeScreen(
                     label = "wave$index",
                 )
             }
-            Box(
+            Column(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .size(140.dp)
-                    .drawBehind {
-                        if (isListening) {
-                            waveProgress.forEach { progress ->
-                                val p = progress.value
-                                drawCircle(
-                                    color = waveColor,
-                                    radius = size.minDimension / 2f * (1f + p * 0.9f),
-                                    alpha = (1f - p) * 0.4f,
-                                    style = Stroke(width = 3.dp.toPx()),
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(140.dp)
+                        .drawBehind {
+                            if (isListening) {
+                                waveProgress.forEach { progress ->
+                                    val p = progress.value
+                                    drawCircle(
+                                        color = waveColor,
+                                        radius = size.minDimension / 2f * (1f + p * 0.9f),
+                                        alpha = (1f - p) * 0.4f,
+                                        style = Stroke(width = 3.dp.toPx()),
+                                    )
+                                }
+                            }
+                        },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    FloatingActionButton(
+                        onClick = {
+                            when {
+                                isListening -> viewModel.stopListening()
+                                isProcessing -> {}
+                                else -> micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                            }
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                        shape = CircleShape,
+                        containerColor = if (isListening) {
+                            MaterialTheme.colorScheme.errorContainer
+                        } else {
+                            MaterialTheme.colorScheme.primaryContainer
+                        },
+                    ) {
+                        Icon(
+                            if (isListening) Icons.Default.Stop else Icons.Default.Mic,
+                            contentDescription = if (isListening) {
+                                strings.stopListeningCd
+                            } else {
+                                strings.startListeningCd
+                            },
+                            modifier = Modifier.size(56.dp),
+                        )
+                    }
+                }
+
+                Spacer(Modifier.height(28.dp))
+
+                // Area di stato ad altezza fissa: il microfono non si sposta
+                // quando i testi cambiano
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    contentAlignment = Alignment.TopCenter,
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        when (val state = uiState) {
+                            is HomeUiState.Idle -> {
+                                Text(
+                                    strings.homeInstruction,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = TextAlign.Center,
+                                )
+                                AnimatedContent(
+                                    targetState = examples[exampleIndex],
+                                    transitionSpec = {
+                                        fadeIn(tween(400)) togetherWith fadeOut(tween(400))
+                                    },
+                                    label = "example",
+                                ) { example ->
+                                    Text(
+                                        "“$example”",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontStyle = FontStyle.Italic,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        textAlign = TextAlign.Center,
+                                    )
+                                }
+                            }
+                            is HomeUiState.Listening -> {
+                                Text(
+                                    strings.listeningTitle,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                                Text(
+                                    state.partialText,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = TextAlign.Center,
+                                )
+                            }
+                            is HomeUiState.Processing -> {
+                                CircularProgressIndicator()
+                                Text(
+                                    "“${state.recognizedText}”",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    textAlign = TextAlign.Center,
+                                )
+                                Text(
+                                    strings.processingTitle,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                            is HomeUiState.Extracted -> {
+                                CircularProgressIndicator()
+                            }
+                            is HomeUiState.Error -> {
+                                Text(
+                                    state.message,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.error,
+                                    textAlign = TextAlign.Center,
+                                )
+                                Text(
+                                    strings.errorRetryHint,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
                         }
-                    },
-                contentAlignment = Alignment.Center,
-            ) {
-                FloatingActionButton(
-                    onClick = {
-                        when {
-                            isListening -> viewModel.stopListening()
-                            isProcessing -> {}
-                            else -> micPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                        }
-                    },
-                    modifier = Modifier.fillMaxSize(),
-                    shape = CircleShape,
-                    containerColor = if (isListening) {
-                        MaterialTheme.colorScheme.errorContainer
-                    } else {
-                        MaterialTheme.colorScheme.primaryContainer
-                    },
-                ) {
-                    Icon(
-                        if (isListening) Icons.Default.Stop else Icons.Default.Mic,
-                        contentDescription = if (isListening) {
-                            strings.stopListeningCd
-                        } else {
-                            strings.startListeningCd
-                        },
-                        modifier = Modifier.size(56.dp),
-                    )
+                    }
                 }
             }
 
