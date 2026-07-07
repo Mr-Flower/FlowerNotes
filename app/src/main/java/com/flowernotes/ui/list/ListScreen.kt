@@ -36,9 +36,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flowernotes.data.SavedEvent
+import com.flowernotes.i18n.I18n
+import com.flowernotes.i18n.LocalStrings
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,16 +47,17 @@ fun ListScreen(
     onBack: () -> Unit,
     viewModel: ListViewModel = viewModel(),
 ) {
+    val strings = LocalStrings.current
     val events by viewModel.events.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Eventi creati") },
+                title = { Text(strings.listTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.back)
                     }
                 },
             )
@@ -70,7 +72,7 @@ fun ListScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
-                    "Nessun evento creato finora.\nDetta il primo dalla schermata principale!",
+                    strings.listEmpty,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
@@ -108,6 +110,7 @@ private fun EventListCard(
     onOpen: () -> Unit,
     onDelete: () -> Unit,
 ) {
+    val strings = LocalStrings.current
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Testi a piena larghezza: niente più date tagliate
@@ -146,20 +149,20 @@ private fun EventListCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
             ) {
-                TextButton(onClick = onOpen) { Text("Apri") }
+                TextButton(onClick = onOpen) { Text(strings.openButton) }
                 TextButton(onClick = onDelete) {
-                    Text("Elimina", color = MaterialTheme.colorScheme.error)
+                    Text(strings.deleteButton, color = MaterialTheme.colorScheme.error)
                 }
             }
         }
     }
 }
 
-/** "2026-07-08" + "15:00" → "Mercoledì 8 luglio · 15:00" */
+/** "2026-07-08" + "15:00" → "Mercoledì 8 luglio 2026 · 15:00" (nella lingua dell'app) */
 private fun formatDateTime(event: SavedEvent): String {
     val dateText = try {
         LocalDate.parse(event.data)
-            .format(DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.ITALIAN))
+            .format(DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", I18n.locale))
             .replaceFirstChar { it.uppercase() }
     } catch (e: Exception) {
         event.data

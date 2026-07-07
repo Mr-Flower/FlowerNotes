@@ -1,5 +1,6 @@
 package com.flowernotes.llm
 
+import com.flowernotes.i18n.I18n
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
@@ -39,8 +40,8 @@ object HttpClient {
     }
 
     private fun httpErrorMessage(code: Int, body: String): String = when (code) {
-        401, 403 -> "API key non valida o non autorizzata (HTTP $code)"
-        429 -> "Limite di richieste raggiunto, riprova tra poco (HTTP 429)"
-        else -> "Errore del provider (HTTP $code): ${body.take(200)}"
+        401, 403 -> "${I18n.strings.httpInvalidKey} (HTTP $code)"
+        429 -> I18n.strings.httpRateLimit
+        else -> "${I18n.strings.httpProviderError} (HTTP $code): ${body.take(200)}"
     }
 }

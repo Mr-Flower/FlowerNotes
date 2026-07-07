@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flowernotes.data.EventoData
+import com.flowernotes.i18n.LocalStrings
 
 /**
  * Schermata di conferma/modifica dell'evento estratto.
@@ -43,6 +44,7 @@ fun ConfirmScreen(
     onCancel: () -> Unit,
     viewModel: ConfirmViewModel = viewModel(),
 ) {
+    val strings = LocalStrings.current
     viewModel.load(initialEvento)
     val uiState = viewModel.uiState
 
@@ -64,10 +66,10 @@ fun ConfirmScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Conferma evento") },
+                title = { Text(strings.confirmTitle) },
                 navigationIcon = {
                     IconButton(onClick = onCancel) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Annulla")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.cancel)
                     }
                 },
             )
@@ -105,7 +107,7 @@ fun ConfirmScreen(
                     modifier = Modifier.weight(1f),
                     enabled = uiState !is ConfirmUiState.Saving,
                 ) {
-                    Text("Annulla")
+                    Text(strings.cancel)
                 }
                 Button(
                     onClick = {
@@ -125,7 +127,7 @@ fun ConfirmScreen(
                     modifier = Modifier.weight(1f),
                     enabled = uiState !is ConfirmUiState.Saving,
                 ) {
-                    Text("Salva sul calendario")
+                    Text(strings.saveToCalendar)
                 }
             }
         }

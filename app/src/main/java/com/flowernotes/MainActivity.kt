@@ -6,13 +6,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flowernotes.data.Settings
 import com.flowernotes.data.SettingsRepository
 import com.flowernotes.data.ThemeMode
+import com.flowernotes.i18n.I18n
+import com.flowernotes.i18n.LocalStrings
 import com.flowernotes.ui.FlowerNotesApp
 import com.flowernotes.ui.theme.FlowerNotesTheme
 
@@ -34,8 +38,16 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.DARK -> true
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
             }
-            FlowerNotesTheme(darkTheme = darkTheme, accent = settings.accent) {
-                FlowerNotesApp(startListenTrigger = listenTrigger)
+            // Allinea il singleton I18n (usato dal codice non-Compose) e le
+            // stringhe fornite alla UI con la lingua scelta nelle impostazioni
+            val strings = remember(settings.language) {
+                I18n.language = settings.language
+                I18n.strings
+            }
+            CompositionLocalProvider(LocalStrings provides strings) {
+                FlowerNotesTheme(darkTheme = darkTheme, accent = settings.accent) {
+                    FlowerNotesApp(startListenTrigger = listenTrigger)
+                }
             }
         }
     }

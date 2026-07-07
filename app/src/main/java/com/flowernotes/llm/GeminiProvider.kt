@@ -1,6 +1,7 @@
 package com.flowernotes.llm
 
 import com.flowernotes.data.EventoData
+import com.flowernotes.i18n.I18n
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -35,7 +36,7 @@ class GeminiProvider(
                 .getJSONArray("parts").getJSONObject(0)
                 .getString("text")
         } catch (e: Exception) {
-            throw LlmException("Risposta Gemini in formato inatteso", e)
+            throw LlmException(I18n.strings.llmUnexpectedFormat, e)
         }
         return ExtractionPrompt.parseResponse(text)
     }

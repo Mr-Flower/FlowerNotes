@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flowernotes.data.EventoData
+import com.flowernotes.i18n.LocalStrings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +41,7 @@ fun ManualScreen(
     onBack: () -> Unit,
     viewModel: ManualViewModel = viewModel(),
 ) {
+    val strings = LocalStrings.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var text by rememberSaveable { mutableStateOf("") }
 
@@ -54,10 +56,10 @@ fun ManualScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Inserimento manuale") },
+                title = { Text(strings.manualTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.back)
                     }
                 },
             )
@@ -72,7 +74,7 @@ fun ManualScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                "Scrivi l'evento come lo detteresti a voce, ci pensa l'assistente a compilare i campi.",
+                strings.manualHint,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -82,8 +84,8 @@ fun ManualScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 120.dp),
-                label = { Text("Testo dell'evento") },
-                placeholder = { Text("es. pranzo con Anna sabato all'una da Gino") },
+                label = { Text(strings.manualLabel) },
+                placeholder = { Text(strings.manualPlaceholder) },
                 enabled = uiState !is ManualUiState.Processing,
             )
 
@@ -103,7 +105,7 @@ fun ManualScreen(
                 enabled = uiState !is ManualUiState.Processing && text.isNotBlank(),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                Text("Analizza")
+                Text(strings.analyzeButton)
             }
         }
     }

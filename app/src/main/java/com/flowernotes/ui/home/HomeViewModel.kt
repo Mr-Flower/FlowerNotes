@@ -5,12 +5,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowernotes.data.EventoData
 import com.flowernotes.data.SettingsRepository
-import com.flowernotes.llm.LlmException
-import com.flowernotes.llm.LlmProviderFactory
+import com.flowernotes.llm.ExtractEventUseCase
 import com.flowernotes.speech.SpeechRecognizerManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /** Stati del flusso vocale sulla Home */
@@ -24,7 +22,7 @@ sealed interface HomeUiState {
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val settingsRepository = SettingsRepository(application)
+    private val extractEvent = ExtractEventUseCase(SettingsRepository(application))
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Idle)
     val uiState: StateFlow<HomeUiState> = _uiState
@@ -52,16 +50,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun extract(text: String) {
         _uiState.value = HomeUiState.Processing(text)
         viewModelScope.launch {
-            try {
-                val settings = settingsRepository.settings.first()
-                val provider = LlmProviderFactory.create(settings)
-                val evento = provider.estraiEvento(text)
-                _uiState.value = HomeUiState.Extracted(evento)
-            } catch (e: LlmException) {
-                _uiState.value = HomeUiState.Error(e.message ?: "Errore sconosciuto")
-            } catch (e: Exception) {
-                _uiState.value = HomeUiState.Error("Errore di rete o del provider: ${e.message}")
-            }
+            extractEvent(text).fold(
+                onSuccess = { evento -> _uiState.value = HomeUiState.Extracted(evento) },
+                onFailure = { e -> _uiState.value = HomeUiState.Error(e.message.orEmpty()) },
+            )
         }
     }
 

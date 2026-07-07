@@ -60,7 +60,12 @@ Unica implementazione: `GeminiProvider`. Il prompt condiviso è in `llm/Extracti
 - Nomi di file/classi in inglese, commenti in italiano dove aiutano la comprensione
 - Package base: `com.flowernotes`
 - Un `ViewModel` per schermata; ViewModel come `AndroidViewModel` (niente DI framework per ora)
-- Stringhe UI in italiano
+- **i18n fatto in casa** (niente appcompat/risorse per lingua): tutte le stringhe UI
+  vivono in `i18n/Strings.kt` (ItalianStrings/EnglishStrings), fornite ai composable
+  via `LocalStrings`; il codice non-Compose (speech, LLM, calendario) usa il
+  singleton `I18n`, che MainActivity tiene allineato alle impostazioni.
+  **Default: inglese.** La lingua guida anche SpeechRecognizer e prompt Gemini.
+- Logica di estrazione condivisa in `llm/ExtractEventUseCase` (usata da Home e Manuale)
 
 ## CI/CD e release
 

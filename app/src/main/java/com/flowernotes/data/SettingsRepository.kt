@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.flowernotes.i18n.AppLanguage
 import com.flowernotes.llm.GeminiModels
 import com.flowernotes.ui.theme.Accents
 import kotlinx.coroutines.flow.Flow
@@ -33,6 +34,8 @@ data class Settings(
     val geminiModel: String = GeminiModels.DEFAULT,
     val accent: String = Accents.DYNAMIC,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    // Inglese di default, su scelta dell'utente
+    val language: AppLanguage = AppLanguage.ENGLISH,
     val defaultDurationMinutes: Int = 60,
     val defaultReminderMinutes: Int = 60,
 )
@@ -43,6 +46,7 @@ class SettingsRepository(private val context: Context) {
     private val geminiModelPref = stringPreferencesKey("gemini_model")
     private val accentPref = stringPreferencesKey("accent_color")
     private val themeModePref = stringPreferencesKey("theme_mode")
+    private val languagePref = stringPreferencesKey("app_language")
     private val defaultDurationPref = intPreferencesKey("default_duration_minutes")
     private val defaultReminderPref = intPreferencesKey("default_reminder_minutes")
 
@@ -53,6 +57,7 @@ class SettingsRepository(private val context: Context) {
             accent = prefs[accentPref]
                 ?: if (Accents.dynamicAvailable()) Accents.DYNAMIC else Accents.OPTIONS.first().id,
             themeMode = ThemeMode.fromId(prefs[themeModePref]),
+            language = prefs[languagePref]?.let { AppLanguage.fromId(it) } ?: AppLanguage.ENGLISH,
             defaultDurationMinutes = prefs[defaultDurationPref] ?: 60,
             defaultReminderMinutes = prefs[defaultReminderPref] ?: 60,
         )
@@ -72,6 +77,10 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setThemeMode(mode: ThemeMode) {
         context.settingsDataStore.edit { it[themeModePref] = mode.id }
+    }
+
+    suspend fun setLanguage(language: AppLanguage) {
+        context.settingsDataStore.edit { it[languagePref] = language.id }
     }
 
     suspend fun setDefaultDuration(minutes: Int) {

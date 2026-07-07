@@ -1,32 +1,43 @@
 # 🌸 FlowerNotes
 
-App Android che trasforma la voce in eventi di calendario: detta un impegno in italiano ("devo andare dal barbiere domani alle 15") e FlowerNotes lo interpreta con un LLM, ti fa confermare i dettagli e lo salva sul calendario del telefono (sincronizzato con Google Calendar).
+Android app that turns your voice into calendar events: dictate a commitment ("dentist on Thursday at 9") and FlowerNotes interprets it with Gemini, lets you confirm the details and saves it to your phone's calendar (synced with Google Calendar).
+
+*FlowerNotes è disponibile anche in italiano: cambia lingua dalle impostazioni.*
 
 ## Download
 
-Scarica l'ultimo APK dalla pagina [Releases](../../releases/latest) e installalo sul telefono (serve abilitare l'installazione da origini sconosciute). L'app **non** è sul Play Store.
+Grab the latest APK from the [Releases](../../releases/latest) page and install it on your phone (you need to allow installs from unknown sources). The app is **not** on the Play Store.
 
-## Come funziona
+## How it works
 
-1. **Detta** l'evento toccando il microfono (o scrivilo con l'inserimento manuale)
-2. **Google Gemini** estrae titolo, data, ora, luogo e promemoria
-3. **Confermi o modifichi** i campi pre-compilati (con date/time picker Material 3)
-4. L'evento viene creato sul **calendario del dispositivo** (l'account Google lo sincronizza con Google Calendar)
-5. Gli eventi creati restano consultabili ed eliminabili nella lista interna
+1. **Dictate** the event by tapping the microphone (or type it with manual entry) — a Quick Settings tile can open the app already listening
+2. **Google Gemini** extracts title, date, time, location and reminder
+3. **Confirm or edit** the pre-filled fields (Material 3 date/time pickers)
+4. The event is created on the **device calendar** (your Google account syncs it with Google Calendar)
+5. Created events stay browsable and deletable in the built-in list
 
-## Configurazione (BYOK — Bring Your Own Key)
+## Configuration (BYOK — Bring Your Own Key)
 
-L'app non include nessuna API key: nelle **Impostazioni** inserisci la tua chiave Gemini, che resta solo sul dispositivo. La crei gratis su [aistudio.google.com/apikey](https://aistudio.google.com/apikey). Puoi anche scegliere quale modello Gemini usare (default: `gemini-2.5-flash`).
+The app ships with no API key: in **Settings**, paste your Gemini key — it never leaves the device. Create one for free at [aistudio.google.com/apikey](https://aistudio.google.com/apikey). You can also pick which Gemini model to use (default: `gemini-2.5-flash`) or type any custom model id.
 
-## Permessi richiesti
+## Features
 
-- **Microfono** — riconoscimento vocale (SpeechRecognizer nativo di Android)
-- **Calendario** — creazione degli eventi tramite il Calendar Provider di sistema
-- **Internet** — solo per la chiamata al provider LLM scelto
+- 🎙️ Native Android speech recognition (English and Italian)
+- 🤖 Event extraction via Gemini (BYOK, model selectable)
+- 🎨 Material You: dynamic colors from your wallpaper or six preset accents, light/dark/system theme
+- 🌍 English and Italian UI, switchable in settings
+- ⚡ Quick Settings tile that opens the app already listening
+- 🔒 No tracking, no app servers, MIT-licensed
 
-## Build da sorgente
+## Permissions
 
-Requisiti: JDK 17 e Android SDK (compileSdk 35).
+- **Microphone** — speech recognition (native Android SpeechRecognizer)
+- **Calendar** — event creation through the system Calendar Provider
+- **Internet** — only for the call to your configured LLM provider
+
+## Building from source
+
+Requirements: JDK 17 and the Android SDK (compileSdk 35).
 
 ```bash
 ./gradlew assembleDebug
@@ -37,6 +48,6 @@ Requisiti: JDK 17 e Android SDK (compileSdk 35).
 
 Kotlin · Jetpack Compose · Material 3 · SpeechRecognizer · CalendarContract · DataStore
 
-## Licenza
+## License
 
-FlowerNotes è software libero distribuito con licenza [MIT](LICENSE).
+FlowerNotes is free software released under the [MIT license](LICENSE).

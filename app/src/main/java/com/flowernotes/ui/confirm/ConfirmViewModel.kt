@@ -10,6 +10,7 @@ import com.flowernotes.calendar.CalendarWriter
 import com.flowernotes.data.EventRepository
 import com.flowernotes.data.EventoData
 import com.flowernotes.data.SavedEvent
+import com.flowernotes.i18n.I18n
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -55,19 +56,20 @@ class ConfirmViewModel(application: Application) : AndroidViewModel(application)
 
     /** Valida i campi; ritorna un messaggio di errore o null se tutto ok */
     fun validate(): String? {
-        if (titolo.isBlank()) return "Il titolo è obbligatorio"
+        val strings = I18n.strings
+        if (titolo.isBlank()) return strings.validationTitleRequired
         try {
             LocalDate.parse(data.trim())
         } catch (e: DateTimeParseException) {
-            return "Data non valida: usa il formato AAAA-MM-GG"
+            return strings.validationInvalidDate
         }
         try {
             LocalTime.parse(ora.trim())
         } catch (e: DateTimeParseException) {
-            return "Ora non valida: usa il formato HH:MM"
+            return strings.validationInvalidTime
         }
-        if (durataMinuti.trim().toIntOrNull() == null) return "Durata non valida"
-        if (reminderMinuti.trim().toIntOrNull() == null) return "Promemoria non valido"
+        if (durataMinuti.trim().toIntOrNull() == null) return strings.validationInvalidDuration
+        if (reminderMinuti.trim().toIntOrNull() == null) return strings.validationInvalidReminder
         return null
     }
 
@@ -102,7 +104,7 @@ class ConfirmViewModel(application: Application) : AndroidViewModel(application)
                 )
                 uiState = ConfirmUiState.Saved
             } catch (e: Exception) {
-                uiState = ConfirmUiState.Error(e.message ?: "Errore durante il salvataggio")
+                uiState = ConfirmUiState.Error(e.message ?: I18n.strings.saveGenericError)
             }
         }
     }

@@ -5,11 +5,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowernotes.data.EventoData
 import com.flowernotes.data.SettingsRepository
-import com.flowernotes.llm.LlmException
-import com.flowernotes.llm.LlmProviderFactory
+import com.flowernotes.i18n.I18n
+import com.flowernotes.llm.ExtractEventUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 sealed interface ManualUiState {
@@ -21,28 +20,22 @@ sealed interface ManualUiState {
 
 class ManualViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val settingsRepository = SettingsRepository(application)
+    private val extractEvent = ExtractEventUseCase(SettingsRepository(application))
 
     private val _uiState = MutableStateFlow<ManualUiState>(ManualUiState.Idle)
     val uiState: StateFlow<ManualUiState> = _uiState
 
     fun extract(text: String) {
         if (text.isBlank()) {
-            _uiState.value = ManualUiState.Error("Scrivi prima il testo dell'evento")
+            _uiState.value = ManualUiState.Error(I18n.strings.manualEmptyError)
             return
         }
         _uiState.value = ManualUiState.Processing
         viewModelScope.launch {
-            try {
-                val settings = settingsRepository.settings.first()
-                val provider = LlmProviderFactory.create(settings)
-                val evento = provider.estraiEvento(text)
-                _uiState.value = ManualUiState.Extracted(evento)
-            } catch (e: LlmException) {
-                _uiState.value = ManualUiState.Error(e.message ?: "Errore sconosciuto")
-            } catch (e: Exception) {
-                _uiState.value = ManualUiState.Error("Errore di rete o del provider: ${e.message}")
-            }
+            extractEvent(text).fold(
+                onSuccess = { evento -> _uiState.value = ManualUiState.Extracted(evento) },
+                onFailure = { e -> _uiState.value = ManualUiState.Error(e.message.orEmpty()) },
+            )
         }
     }
 

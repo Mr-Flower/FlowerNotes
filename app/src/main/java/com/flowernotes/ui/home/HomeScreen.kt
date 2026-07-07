@@ -3,6 +3,7 @@ package com.flowernotes.ui.home
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.StartOffset
@@ -10,6 +11,9 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,16 +45,26 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.flowernotes.R
 import com.flowernotes.data.EventoData
+import com.flowernotes.i18n.LocalStrings
+import kotlinx.coroutines.delay
+import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,6 +76,7 @@ fun HomeScreen(
     startListenTrigger: Int = 0,
     viewModel: HomeViewModel = viewModel(),
 ) {
+    val strings = LocalStrings.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Quando l'estrazione è completata, naviga alla schermata di conferma
@@ -86,13 +101,23 @@ fun HomeScreen(
         }
     }
 
+    // Frase d'esempio: casuale a ogni apertura, ruota ogni 8 secondi
+    val examples = strings.homeExamples
+    var exampleIndex by remember { mutableIntStateOf(Random.nextInt(examples.size)) }
+    LaunchedEffect(examples) {
+        while (true) {
+            delay(8000)
+            exampleIndex = (exampleIndex + 1) % examples.size
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("FlowerNotes") },
+                title = {},
                 actions = {
                     IconButton(onClick = onOpenSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Impostazioni")
+                        Icon(Icons.Default.Settings, contentDescription = strings.settingsCd)
                     }
                 },
             )
@@ -107,33 +132,61 @@ fun HomeScreen(
                 .padding(padding)
                 .padding(horizontal = 24.dp),
         ) {
-            // Testo di stato nella fascia superiore
+            // Branding + stato nella fascia superiore, sopra il microfono
             Column(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .fillMaxWidth()
-                    .padding(top = 40.dp),
+                    .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                Icon(
+                    painterResource(R.drawable.logo_artwork),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(84.dp),
+                )
+                Text(
+                    "FlowerNotes",
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+                Text(
+                    strings.homeTagline,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+
+                Spacer(Modifier.height(12.dp))
+
                 when (val state = uiState) {
                     is HomeUiState.Idle -> {
                         Text(
-                            "Tocca il microfono\ne detta l'evento",
-                            style = MaterialTheme.typography.headlineSmall,
+                            strings.homeInstruction,
+                            style = MaterialTheme.typography.bodyLarge,
                             textAlign = TextAlign.Center,
                         )
-                        Text(
-                            "es. \"devo andare dal barbiere domani alle 15\"",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                        )
+                        AnimatedContent(
+                            targetState = examples[exampleIndex],
+                            transitionSpec = { fadeIn(tween(400)) togetherWith fadeOut(tween(400)) },
+                            label = "example",
+                        ) { example ->
+                            Text(
+                                "“$example”",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontStyle = FontStyle.Italic,
+                                color = MaterialTheme.colorScheme.primary,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
                     }
                     is HomeUiState.Listening -> {
                         Text(
-                            "Ti ascolto…",
-                            style = MaterialTheme.typography.headlineSmall,
+                            strings.listeningTitle,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
                         )
                         Text(
                             state.partialText,
@@ -149,7 +202,7 @@ fun HomeScreen(
                             textAlign = TextAlign.Center,
                         )
                         Text(
-                            "Sto interpretando…",
+                            strings.processingTitle,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -165,7 +218,7 @@ fun HomeScreen(
                             textAlign = TextAlign.Center,
                         )
                         Text(
-                            "Tocca il microfono per riprovare",
+                            strings.errorRetryHint,
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -173,8 +226,8 @@ fun HomeScreen(
                 }
             }
 
-            // Microfono al centro esatto dello schermo. Mentre ascolta, dal
-            // pulsante si propagano onde concentriche che sfumano allargandosi.
+            // Microfono al centro. Mentre ascolta, onde concentriche che
+            // si propagano sfumando allargandosi.
             val waveColor = MaterialTheme.colorScheme.primary
             val waveTransition = rememberInfiniteTransition(label = "waves")
             val waveProgress = List(3) { index ->
@@ -226,7 +279,11 @@ fun HomeScreen(
                 ) {
                     Icon(
                         if (isListening) Icons.Default.Stop else Icons.Default.Mic,
-                        contentDescription = if (isListening) "Ferma ascolto" else "Avvia ascolto",
+                        contentDescription = if (isListening) {
+                            strings.stopListeningCd
+                        } else {
+                            strings.startListeningCd
+                        },
                         modifier = Modifier.size(56.dp),
                     )
                 }
@@ -242,14 +299,14 @@ fun HomeScreen(
             ) {
                 TileButton(
                     icon = Icons.Default.Edit,
-                    label = "Scrivi",
+                    label = strings.writeButton,
                     onClick = onOpenManual,
                     enabled = !isProcessing,
                     modifier = Modifier.weight(1f),
                 )
                 TileButton(
                     icon = Icons.AutoMirrored.Filled.EventNote,
-                    label = "Eventi",
+                    label = strings.eventsButton,
                     onClick = onOpenList,
                     enabled = !isProcessing,
                     modifier = Modifier.weight(1f),

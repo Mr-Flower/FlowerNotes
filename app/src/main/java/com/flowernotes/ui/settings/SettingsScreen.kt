@@ -38,6 +38,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -58,6 +59,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flowernotes.data.ThemeMode
+import com.flowernotes.i18n.AppLanguage
+import com.flowernotes.i18n.LocalStrings
 import com.flowernotes.llm.GeminiModels
 import com.flowernotes.ui.theme.Accents
 
@@ -68,8 +71,8 @@ fun SettingsScreen(
     onOpenInfo: () -> Unit,
     viewModel: SettingsViewModel = viewModel(),
 ) {
+    val strings = LocalStrings.current
     val snackbarHostState = remember { SnackbarHostState() }
-    var showKey by rememberSaveable { mutableStateOf(false) }
 
     // Mostra il feedback (chiave salvata/rimossa) come snackbar
     LaunchedEffect(viewModel.feedback) {
@@ -79,15 +82,15 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Impostazioni") },
+                title = { Text(strings.settingsTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.back)
                     }
                 },
                 actions = {
                     IconButton(onClick = onOpenInfo) {
-                        Icon(Icons.Default.Info, contentDescription = "Informazioni sull'app")
+                        Icon(Icons.Default.Info, contentDescription = strings.infoCd)
                     }
                 },
             )
@@ -105,7 +108,8 @@ fun SettingsScreen(
             if (!viewModel.loaded) return@Column
 
             ThemeCard(viewModel)
-            ApiKeyCard(viewModel, showKey, onToggleShowKey = { showKey = !showKey })
+            LanguageCard(viewModel)
+            ApiKeyCard(viewModel)
             ModelCard(viewModel)
             EventDefaultsCard(viewModel)
         }
@@ -115,12 +119,13 @@ fun SettingsScreen(
 /** Selettore accento colore (dinamico Material You o predefiniti) e tema chiaro/scuro */
 @Composable
 private fun ThemeCard(viewModel: SettingsViewModel) {
+    val strings = LocalStrings.current
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Tema", style = MaterialTheme.typography.titleMedium)
+            Text(strings.themeTitle, style = MaterialTheme.typography.titleMedium)
 
             Row(
                 modifier = Modifier
@@ -130,7 +135,7 @@ private fun ThemeCard(viewModel: SettingsViewModel) {
             ) {
                 if (Accents.dynamicAvailable()) {
                     AccentSwatch(
-                        label = "Dinamico",
+                        label = strings.dynamicAccentLabel,
                         selected = viewModel.accent == Accents.DYNAMIC,
                         brush = Brush.sweepGradient(
                             listOf(
@@ -143,7 +148,7 @@ private fun ThemeCard(viewModel: SettingsViewModel) {
                 }
                 Accents.OPTIONS.forEach { option ->
                     AccentSwatch(
-                        label = option.label,
+                        label = strings.accentNames[option.id] ?: option.label,
                         selected = viewModel.accent == option.id,
                         brush = Brush.linearGradient(listOf(option.seed, option.seed)),
                         onClick = { viewModel.selectAccent(option.id) },
@@ -161,7 +166,35 @@ private fun ThemeCard(viewModel: SettingsViewModel) {
                             count = ThemeMode.entries.size,
                         ),
                     ) {
-                        Text(mode.label)
+                        Text(strings.themeModeLabels[mode.id] ?: mode.id)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Lingua dell'app (vale anche per riconoscimento vocale e prompt del modello) */
+@Composable
+private fun LanguageCard(viewModel: SettingsViewModel) {
+    val strings = LocalStrings.current
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(strings.languageTitle, style = MaterialTheme.typography.titleMedium)
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                AppLanguage.entries.forEachIndexed { index, language ->
+                    SegmentedButton(
+                        selected = viewModel.language == language,
+                        onClick = { viewModel.selectLanguage(language) },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = AppLanguage.entries.size,
+                        ),
+                    ) {
+                        Text(strings.languageNames[language.id] ?: language.id)
                     }
                 }
             }
@@ -177,6 +210,7 @@ private fun AccentSwatch(
     brush: Brush,
     onClick: () -> Unit,
 ) {
+    val strings = LocalStrings.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -188,7 +222,7 @@ private fun AccentSwatch(
                 .background(brush),
             contentAlignment = Alignment.Center,
         ) {
-            androidx.compose.material3.Surface(
+            Surface(
                 onClick = onClick,
                 shape = CircleShape,
                 color = Color.Transparent,
@@ -198,7 +232,7 @@ private fun AccentSwatch(
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                         Icon(
                             Icons.Default.Check,
-                            contentDescription = "$label selezionato",
+                            contentDescription = "$label ${strings.selectedCd}",
                             tint = Color.White,
                         )
                     }
@@ -218,27 +252,24 @@ private fun AccentSwatch(
 }
 
 @Composable
-private fun ApiKeyCard(
-    viewModel: SettingsViewModel,
-    showKey: Boolean,
-    onToggleShowKey: () -> Unit,
-) {
+private fun ApiKeyCard(viewModel: SettingsViewModel) {
+    val strings = LocalStrings.current
+    var showKey by rememberSaveable { mutableStateOf(false) }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("API key di Gemini", style = MaterialTheme.typography.titleMedium)
+            Text(strings.apiKeyTitle, style = MaterialTheme.typography.titleMedium)
             Text(
-                "Crea la tua chiave gratuita su aistudio.google.com/apikey. " +
-                    "Resta salvata solo su questo dispositivo.",
+                strings.apiKeyHint,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             OutlinedTextField(
                 value = viewModel.apiKeyInput,
                 onValueChange = { viewModel.apiKeyInput = it },
-                label = { Text("API key") },
+                label = { Text(strings.apiKeyLabel) },
                 singleLine = true,
                 visualTransformation = if (showKey) {
                     VisualTransformation.None
@@ -247,17 +278,17 @@ private fun ApiKeyCard(
                 },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 trailingIcon = {
-                    IconButton(onClick = onToggleShowKey) {
+                    IconButton(onClick = { showKey = !showKey }) {
                         Icon(
                             if (showKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = if (showKey) "Nascondi chiave" else "Mostra chiave",
+                            contentDescription = if (showKey) strings.hideKeyCd else strings.showKeyCd,
                         )
                     }
                 },
                 supportingText = {
                     Text(
-                        if (viewModel.savedKeyExists) "Chiave configurata ✓"
-                        else "Nessuna chiave salvata"
+                        if (viewModel.savedKeyExists) strings.keyConfigured
+                        else strings.noKeySaved
                     )
                 },
                 modifier = Modifier.fillMaxWidth(),
@@ -268,7 +299,7 @@ private fun ApiKeyCard(
                     modifier = Modifier.weight(1f),
                 ) {
                     Icon(Icons.Default.Check, contentDescription = null)
-                    Text(" Salva")
+                    Text(" ${strings.saveButton}")
                 }
                 OutlinedButton(
                     onClick = { viewModel.clearKey() },
@@ -276,7 +307,7 @@ private fun ApiKeyCard(
                     enabled = viewModel.savedKeyExists || viewModel.apiKeyInput.isNotEmpty(),
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = null)
-                    Text(" Rimuovi")
+                    Text(" ${strings.removeButton}")
                 }
             }
         }
@@ -286,12 +317,13 @@ private fun ApiKeyCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ModelCard(viewModel: SettingsViewModel) {
+    val strings = LocalStrings.current
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Modello", style = MaterialTheme.typography.titleMedium)
+            Text(strings.modelTitle, style = MaterialTheme.typography.titleMedium)
             var expanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(
                 expanded = expanded,
@@ -302,17 +334,13 @@ private fun ModelCard(viewModel: SettingsViewModel) {
                 OutlinedTextField(
                     value = viewModel.model,
                     onValueChange = { viewModel.selectModel(it) },
-                    label = { Text("Modello Gemini") },
+                    label = { Text(strings.modelLabel) },
                     singleLine = true,
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                     },
                     supportingText = {
-                        Text(
-                            GeminiModels.AVAILABLE
-                                .firstOrNull { it.first == viewModel.model }?.second
-                                ?: "Modello personalizzato"
-                        )
+                        Text(strings.modelDescriptions[viewModel.model] ?: strings.customModel)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -322,13 +350,13 @@ private fun ModelCard(viewModel: SettingsViewModel) {
                     expanded = expanded,
                     onDismissRequest = { expanded = false },
                 ) {
-                    GeminiModels.AVAILABLE.forEach { (id, description) ->
+                    GeminiModels.AVAILABLE.forEach { id ->
                         DropdownMenuItem(
                             text = {
                                 Column {
                                     Text(id, style = MaterialTheme.typography.bodyLarge)
                                     Text(
-                                        description,
+                                        strings.modelDescriptions[id].orEmpty(),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -349,14 +377,15 @@ private fun ModelCard(viewModel: SettingsViewModel) {
 /** Durata e promemoria predefiniti per i nuovi eventi */
 @Composable
 private fun EventDefaultsCard(viewModel: SettingsViewModel) {
+    val strings = LocalStrings.current
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            Text("Nuovi eventi", style = MaterialTheme.typography.titleMedium)
+            Text(strings.newEventsTitle, style = MaterialTheme.typography.titleMedium)
             Text(
-                "Valori usati quando non li specifichi a voce.",
+                strings.newEventsHint,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -364,8 +393,8 @@ private fun EventDefaultsCard(viewModel: SettingsViewModel) {
                 OutlinedTextField(
                     value = viewModel.durationInput,
                     onValueChange = { viewModel.onDurationChange(it) },
-                    label = { Text("Durata") },
-                    supportingText = { Text("minuti") },
+                    label = { Text(strings.fieldDuration) },
+                    supportingText = { Text(strings.minutes) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
@@ -373,8 +402,8 @@ private fun EventDefaultsCard(viewModel: SettingsViewModel) {
                 OutlinedTextField(
                     value = viewModel.reminderInput,
                     onValueChange = { viewModel.onReminderChange(it) },
-                    label = { Text("Avviso") },
-                    supportingText = { Text("minuti prima") },
+                    label = { Text(strings.fieldReminder) },
+                    supportingText = { Text(strings.minutesBefore) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),

@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import com.flowernotes.i18n.I18n
 
 /**
  * Wrapper del SpeechRecognizer nativo di Android.
@@ -33,7 +34,7 @@ class SpeechRecognizerManager(
 
     private fun startInternal() {
         if (!isAvailable()) {
-            onError("Riconoscimento vocale non disponibile su questo dispositivo")
+            onError(I18n.strings.speechNotAvailable)
             return
         }
         val r = recognizer ?: SpeechRecognizer.createSpeechRecognizer(context).also {
@@ -74,7 +75,7 @@ class SpeechRecognizerManager(
                 ?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                 ?.firstOrNull()
             if (text.isNullOrBlank()) {
-                onError("Non ho capito, riprova")
+                onError(I18n.strings.speechNotUnderstood)
             } else {
                 onResult(text)
             }
@@ -95,25 +96,24 @@ class SpeechRecognizerManager(
 
     private fun buildIntent() = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
         putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        putExtra(RecognizerIntent.EXTRA_LANGUAGE, "it-IT")
+        // La lingua del riconoscimento segue quella scelta nelle impostazioni
+        putExtra(RecognizerIntent.EXTRA_LANGUAGE, I18n.speechLanguageTag)
         putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
         putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
     }
 
     private fun errorMessage(code: Int): String = when (code) {
         SpeechRecognizer.ERROR_NO_MATCH,
-        SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "Non ho sentito nulla, riprova"
-        SpeechRecognizer.ERROR_AUDIO -> "Errore audio"
+        SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> I18n.strings.speechNothingHeard
+        SpeechRecognizer.ERROR_AUDIO -> I18n.strings.speechAudioError
         SpeechRecognizer.ERROR_NETWORK,
-        SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "Errore di rete del riconoscimento vocale"
-        SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "Permesso microfono mancante"
-        SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "Riconoscimento occupato, riprova"
-        SpeechRecognizer.ERROR_TOO_MANY_REQUESTS -> "Troppe richieste, attendi un momento"
-        SpeechRecognizer.ERROR_SERVER_DISCONNECTED ->
-            "Il servizio di riconoscimento si è disconnesso, riprova"
+        SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> I18n.strings.speechNetworkError
+        SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> I18n.strings.speechMicPermission
+        SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> I18n.strings.speechBusy
+        SpeechRecognizer.ERROR_TOO_MANY_REQUESTS -> I18n.strings.speechTooMany
+        SpeechRecognizer.ERROR_SERVER_DISCONNECTED -> I18n.strings.speechDisconnected
         SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED,
-        SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE ->
-            "Italiano non disponibile nel riconoscimento vocale del dispositivo"
-        else -> "Errore del riconoscimento vocale (codice $code)"
+        SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE -> I18n.strings.speechLangUnavailable
+        else -> "${I18n.strings.speechGenericError} ($code)"
     }
 }

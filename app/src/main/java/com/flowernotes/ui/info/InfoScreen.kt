@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -25,8 +26,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.flowernotes.R
+import com.flowernotes.i18n.LocalStrings
 
 private const val REPO_URL = "https://github.com/Mr-Flower/FlowerNotes"
 
@@ -43,6 +47,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InfoScreen(onBack: () -> Unit) {
+    val strings = LocalStrings.current
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val versionName = remember {
@@ -56,10 +61,10 @@ fun InfoScreen(onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Informazioni") },
+                title = { Text(strings.infoTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.back)
                     }
                 },
             )
@@ -74,18 +79,20 @@ fun InfoScreen(onBack: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("🌸", style = MaterialTheme.typography.displayMedium)
+            Icon(
+                painterResource(R.drawable.logo_artwork),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(72.dp),
+            )
             Text("FlowerNotes", style = MaterialTheme.typography.headlineMedium)
             Text(
-                "Versione $versionName",
+                "${strings.versionPrefix} $versionName",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                "Detta un impegno in italiano e FlowerNotes lo trasforma in un " +
-                    "evento sul tuo calendario: il testo viene interpretato da " +
-                    "Gemini, tu confermi i dettagli e l'evento si sincronizza con " +
-                    "Google Calendar.",
+                strings.appDescription,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
             )
@@ -95,10 +102,9 @@ fun InfoScreen(onBack: () -> Unit) {
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text("Progetto", style = MaterialTheme.typography.titleMedium)
+                    Text(strings.projectTitle, style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "App open source sviluppata da Mr-Flower. Codice sorgente, " +
-                            "segnalazioni e nuove versioni sono su GitHub.",
+                        strings.projectText,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -110,7 +116,7 @@ fun InfoScreen(onBack: () -> Unit) {
                             Icons.AutoMirrored.Filled.OpenInNew,
                             contentDescription = null,
                         )
-                        Text(" Apri su GitHub")
+                        Text(" ${strings.openGithub}")
                     }
                 }
             }
@@ -120,12 +126,9 @@ fun InfoScreen(onBack: () -> Unit) {
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text("Privacy", style = MaterialTheme.typography.titleMedium)
+                    Text(strings.privacyTitle, style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "Nessun tracciamento e nessun server dell'app: la tua API key " +
-                            "e gli eventi restano sul dispositivo. L'unico dato che " +
-                            "lascia il telefono è il testo dettato, inviato al " +
-                            "provider LLM che hai configurato per interpretarlo.",
+                        strings.privacyText,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -137,10 +140,9 @@ fun InfoScreen(onBack: () -> Unit) {
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text("Licenza", style = MaterialTheme.typography.titleMedium)
+                    Text(strings.licenseTitle, style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "FlowerNotes è software libero distribuito con licenza MIT: " +
-                            "puoi usarlo, studiarlo, modificarlo e ridistribuirlo.",
+                        strings.licenseText,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )

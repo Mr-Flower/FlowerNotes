@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.CalendarContract
 import com.flowernotes.data.EventoData
+import com.flowernotes.i18n.I18n
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -24,7 +25,7 @@ class CalendarWriter(private val context: Context) {
     /** Inserisce l'evento e il relativo promemoria; ritorna l'id dell'evento */
     fun insert(evento: EventoData): Long {
         val calendarId = findWritableCalendarId()
-            ?: throw CalendarException("Nessun calendario scrivibile trovato sul dispositivo")
+            ?: throw CalendarException(I18n.strings.calendarNoneWritable)
 
         val zone = ZoneId.systemDefault()
         val startDateTime = LocalDateTime.of(
@@ -48,7 +49,7 @@ class CalendarWriter(private val context: Context) {
         }
 
         val uri = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
-            ?: throw CalendarException("Inserimento evento fallito")
+            ?: throw CalendarException(I18n.strings.calendarInsertFailed)
         val eventId = ContentUris.parseId(uri)
 
         // Promemoria

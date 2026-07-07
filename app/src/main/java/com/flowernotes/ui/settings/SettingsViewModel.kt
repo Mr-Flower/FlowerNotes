@@ -8,6 +8,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowernotes.data.SettingsRepository
 import com.flowernotes.data.ThemeMode
+import com.flowernotes.i18n.AppLanguage
+import com.flowernotes.i18n.I18n
 import com.flowernotes.llm.GeminiModels
 import com.flowernotes.ui.theme.Accents
 import kotlinx.coroutines.flow.first
@@ -32,6 +34,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         private set
     var themeMode by mutableStateOf(ThemeMode.SYSTEM)
         private set
+    var language by mutableStateOf(AppLanguage.ENGLISH)
+        private set
     var durationInput by mutableStateOf("60")
     var reminderInput by mutableStateOf("60")
     var loaded by mutableStateOf(false)
@@ -47,6 +51,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             model = s.geminiModel
             accent = s.accent
             themeMode = s.themeMode
+            language = s.language
             durationInput = s.defaultDurationMinutes.toString()
             reminderInput = s.defaultReminderMinutes.toString()
             loaded = true
@@ -59,7 +64,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             settingsRepository.setGeminiKey(key)
             apiKeyInput = key
             savedKeyExists = key.isNotBlank()
-            feedback = if (key.isBlank()) "Chiave rimossa" else "Chiave salvata"
+            feedback = if (key.isBlank()) {
+                I18n.strings.keyRemovedFeedback
+            } else {
+                I18n.strings.keySavedFeedback
+            }
         }
     }
 
@@ -68,7 +77,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             settingsRepository.setGeminiKey("")
             savedKeyExists = false
-            feedback = "Chiave rimossa"
+            feedback = I18n.strings.keyRemovedFeedback
         }
     }
 
@@ -85,6 +94,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun selectThemeMode(mode: ThemeMode) {
         themeMode = mode
         viewModelScope.launch { settingsRepository.setThemeMode(mode) }
+    }
+
+    fun selectLanguage(newLanguage: AppLanguage) {
+        language = newLanguage
+        viewModelScope.launch { settingsRepository.setLanguage(newLanguage) }
     }
 
     fun onDurationChange(value: String) {
