@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema base: quello vero è gestito da Compose in ui/theme -->
+    <style name="Theme.FlowerNotes" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

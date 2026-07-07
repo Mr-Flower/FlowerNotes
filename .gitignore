@@ -1,0 +1,22 @@
+# Gradle
+.gradle/
+build/
+app/build/
+
+# Configurazione locale (percorso SDK, non va in repo)
+local.properties
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Keystore di firma (mai committare)
+*.jks
+*.keystore
+
+# Varie
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
