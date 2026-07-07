@@ -9,20 +9,14 @@ Scarica l'ultimo APK dalla pagina [Releases](../../releases/latest) e installalo
 ## Come funziona
 
 1. **Detta** l'evento toccando il microfono (o scrivilo con l'inserimento manuale)
-2. Un **LLM a tua scelta** (Gemini, Claude o OpenAI) estrae titolo, data, ora, luogo e promemoria
-3. **Confermi o modifichi** i campi pre-compilati
+2. **Google Gemini** estrae titolo, data, ora, luogo e promemoria
+3. **Confermi o modifichi** i campi pre-compilati (con date/time picker Material 3)
 4. L'evento viene creato sul **calendario del dispositivo** (l'account Google lo sincronizza con Google Calendar)
 5. Gli eventi creati restano consultabili ed eliminabili nella lista interna
 
 ## Configurazione (BYOK — Bring Your Own Key)
 
-L'app non include nessuna API key: nelle **Impostazioni** scegli il provider e inserisci la tua chiave, che resta solo sul dispositivo.
-
-| Provider | Dove ottenere la key |
-|---|---|
-| Google Gemini | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (piano gratuito disponibile) |
-| Anthropic Claude | [console.anthropic.com](https://console.anthropic.com/) |
-| OpenAI | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
+L'app non include nessuna API key: nelle **Impostazioni** inserisci la tua chiave Gemini, che resta solo sul dispositivo. La crei gratis su [aistudio.google.com/apikey](https://aistudio.google.com/apikey). Puoi anche scegliere quale modello Gemini usare (default: `gemini-2.5-flash`).
 
 ## Permessi richiesti
 

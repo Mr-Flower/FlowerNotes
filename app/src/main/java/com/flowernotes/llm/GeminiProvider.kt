@@ -4,7 +4,10 @@ import com.flowernotes.data.EventoData
 import org.json.JSONArray
 import org.json.JSONObject
 
-class GeminiProvider(private val apiKey: String) : LlmProvider {
+class GeminiProvider(
+    private val apiKey: String,
+    private val model: String = GeminiModels.DEFAULT,
+) : LlmProvider {
 
     override suspend fun estraiEvento(testo: String): EventoData {
         val body = JSONObject().apply {
@@ -18,7 +21,7 @@ class GeminiProvider(private val apiKey: String) : LlmProvider {
         }
 
         val response = HttpClient.postJson(
-            url = "https://generativelanguage.googleapis.com/v1beta/models/$MODEL:generateContent",
+            url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent",
             body = body.toString(),
             headers = mapOf("x-goog-api-key" to apiKey),
         )
@@ -33,9 +36,5 @@ class GeminiProvider(private val apiKey: String) : LlmProvider {
             throw LlmException("Risposta Gemini in formato inatteso", e)
         }
         return ExtractionPrompt.parseResponse(text)
-    }
-
-    companion object {
-        const val MODEL = "gemini-2.0-flash"
     }
 }

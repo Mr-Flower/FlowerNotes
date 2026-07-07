@@ -31,16 +31,18 @@ Repo GitHub: `Mr-Flower/FlowerNotes` — distribuzione APK via GitHub Releases.
 
 ## Provider LLM (architettura BYOK)
 
-L'utente sceglie il proprio provider e fornisce la propria API key nelle impostazioni. Nessuna key hardcoded o di proprietà dell'app. Le key sono salvate in DataStore, solo sul dispositivo.
+**Decisione (2026-07-07)**: provider unico Google Gemini — l'utente ha chiesto di rimuovere Claude/OpenAI. L'utente fornisce la propria API key nelle impostazioni e può scegliere il modello (lista in `llm/GeminiModels.kt`, default `gemini-2.5-flash`). Nessuna key hardcoded; le key sono salvate in DataStore, solo sul dispositivo.
 
-Interfaccia comune (`llm/LlmProvider.kt`):
+Interfaccia comune (`llm/LlmProvider.kt`), mantenuta astratta per eventuali provider futuri:
 ```kotlin
 interface LlmProvider {
     suspend fun estraiEvento(testo: String): EventoData
 }
 ```
 
-Implementazioni: `GeminiProvider` (gemini-2.0-flash), `ClaudeProvider` (claude-haiku-4-5), `OpenAiProvider` (gpt-4o-mini). Il prompt condiviso è in `llm/ExtractionPrompt.kt` e richiede output JSON puro; il parsing tollera eventuali code fence.
+Unica implementazione: `GeminiProvider`. Il prompt condiviso è in `llm/ExtractionPrompt.kt` e richiede output JSON puro; il parsing tollera eventuali code fence.
+
+**Nota UI (bug fix v0.2.0)**: i campi di testo che persistono su DataStore NON devono essere legati direttamente al Flow (binding bidirezionale asincrono = cursore che salta, testo che "torna indietro"). Usare stato locale nel ViewModel + salvataggio esplicito, come in `SettingsViewModel`.
 
 ## Struttura del codice
 
