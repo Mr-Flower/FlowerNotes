@@ -1,36 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Versione monocromatica per le icone a tema Material You (Android 13+) -->
+<!-- Versione monocromatica (icone a tema Material You, Android 13+) -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <group android:pivotX="54" android:pivotY="54">
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M54,24 C60,24 64,30 64,36 C64,42 60,48 54,48 C48,48 44,42 44,36 C44,30 48,24 54,24 Z" />
-        <group android:rotation="72" android:pivotX="54" android:pivotY="54">
-            <path
-                android:fillColor="#FFFFFF"
-                android:pathData="M54,24 C60,24 64,30 64,36 C64,42 60,48 54,48 C48,48 44,42 44,36 C44,30 48,24 54,24 Z" />
-        </group>
-        <group android:rotation="144" android:pivotX="54" android:pivotY="54">
-            <path
-                android:fillColor="#FFFFFF"
-                android:pathData="M54,24 C60,24 64,30 64,36 C64,42 60,48 54,48 C48,48 44,42 44,36 C44,30 48,24 54,24 Z" />
-        </group>
-        <group android:rotation="216" android:pivotX="54" android:pivotY="54">
-            <path
-                android:fillColor="#FFFFFF"
-                android:pathData="M54,24 C60,24 64,30 64,36 C64,42 60,48 54,48 C48,48 44,42 44,36 C44,30 48,24 54,24 Z" />
-        </group>
-        <group android:rotation="288" android:pivotX="54" android:pivotY="54">
-            <path
-                android:fillColor="#FFFFFF"
-                android:pathData="M54,24 C60,24 64,30 64,36 C64,42 60,48 54,48 C48,48 44,42 44,36 C44,30 48,24 54,24 Z" />
-        </group>
-        <path
-            android:fillColor="#FFFFFF"
-            android:pathData="M54,54 m-9,0 a9,9 0 1,1 18,0 a9,9 0 1,1 -18,0" />
-    </group>
+
+    <!-- Contorno della nota -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:strokeLineJoin="round"
+        android:pathData="M36,22 H62 L82,42 V82 A8,8 0 0 1 74,90 H36 A8,8 0 0 1 28,82 V30 A8,8 0 0 1 36,22 Z" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:strokeLineJoin="round"
+        android:pathData="M62,22 V38 A4,4 0 0 0 66,42 H82" />
+
+    <!-- Petali -->
+    <path android:fillColor="#FFFFFF" android:pathData="M66,54 m-5,0 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0" />
+    <path android:fillColor="#FFFFFF" android:pathData="M60.5,63.5 m-5,0 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0" />
+    <path android:fillColor="#FFFFFF" android:pathData="M49.5,63.5 m-5,0 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0" />
+    <path android:fillColor="#FFFFFF" android:pathData="M44,54 m-5,0 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0" />
+    <path android:fillColor="#FFFFFF" android:pathData="M49.5,44.5 m-5,0 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0" />
+    <path android:fillColor="#FFFFFF" android:pathData="M60.5,44.5 m-5,0 a5,5 0 1,1 10,0 a5,5 0 1,1 -10,0" />
+
+    <!-- Capsula, archetto, stelo e base -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M55,42 a7,7 0 0 1 7,7 v8 a7,7 0 0 1 -14,0 v-8 a7,7 0 0 1 7,-7 z" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M44,56 C44,63.5 48.5,68 55,68 C61.5,68 66,63.5 66,56" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M55,68 L55,74" />
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M47,77 L63,77" />
 </vector>

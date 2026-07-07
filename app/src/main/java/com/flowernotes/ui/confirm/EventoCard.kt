@@ -133,41 +133,41 @@ fun EventoCard(
                 enabled = enabled,
                 modifier = Modifier.fillMaxWidth(),
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = viewModel.data,
-                    onValueChange = { viewModel.data = it },
-                    label = { Text("Data") },
-                    placeholder = { Text("AAAA-MM-GG") },
-                    singleLine = true,
-                    enabled = enabled,
-                    trailingIcon = {
-                        IconButton(onClick = { showDatePicker = true }, enabled = enabled) {
-                            Icon(Icons.Default.CalendarMonth, contentDescription = "Scegli data")
-                        }
-                    },
-                    modifier = Modifier.weight(1f),
-                )
-                OutlinedTextField(
-                    value = viewModel.ora,
-                    onValueChange = { viewModel.ora = it },
-                    label = { Text("Ora") },
-                    placeholder = { Text("HH:MM") },
-                    singleLine = true,
-                    enabled = enabled,
-                    trailingIcon = {
-                        IconButton(onClick = { showTimePicker = true }, enabled = enabled) {
-                            Icon(Icons.Default.Schedule, contentDescription = "Scegli ora")
-                        }
-                    },
-                    modifier = Modifier.weight(1f),
-                )
-            }
+            // Data e ora a piena larghezza: affiancate + icona il testo veniva tagliato
+            OutlinedTextField(
+                value = viewModel.data,
+                onValueChange = { viewModel.data = it },
+                label = { Text("Data") },
+                placeholder = { Text("AAAA-MM-GG") },
+                singleLine = true,
+                enabled = enabled,
+                trailingIcon = {
+                    IconButton(onClick = { showDatePicker = true }, enabled = enabled) {
+                        Icon(Icons.Default.CalendarMonth, contentDescription = "Scegli data")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = viewModel.ora,
+                onValueChange = { viewModel.ora = it },
+                label = { Text("Ora") },
+                placeholder = { Text("HH:MM") },
+                singleLine = true,
+                enabled = enabled,
+                trailingIcon = {
+                    IconButton(onClick = { showTimePicker = true }, enabled = enabled) {
+                        Icon(Icons.Default.Schedule, contentDescription = "Scegli ora")
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = viewModel.durataMinuti,
                     onValueChange = { viewModel.durataMinuti = it },
-                    label = { Text("Durata (min)") },
+                    label = { Text("Durata") },
+                    supportingText = { Text("minuti") },
                     singleLine = true,
                     enabled = enabled,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -176,7 +176,8 @@ fun EventoCard(
                 OutlinedTextField(
                     value = viewModel.reminderMinuti,
                     onValueChange = { viewModel.reminderMinuti = it },
-                    label = { Text("Avvisami (min prima)") },
+                    label = { Text("Avviso") },
+                    supportingText = { Text("minuti prima") },
                     singleLine = true,
                     enabled = enabled,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),

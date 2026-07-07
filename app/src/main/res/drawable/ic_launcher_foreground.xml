@@ -1,36 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Fiore stilizzato: 5 petali attorno a un centro -->
+<!-- Microfono stilizzato a fiore dentro una nota, su sfondo AMOLED nero -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <group android:pivotX="54" android:pivotY="54">
-        <path
-            android:fillColor="#EC407A"
-            android:pathData="M54,24 C60,24 64,30 64,36 C64,42 60,48 54,48 C48,48 44,42 44,36 C44,30 48,24 54,24 Z" />
-        <group android:rotation="72" android:pivotX="54" android:pivotY="54">
-            <path
-                android:fillColor="#EC407A"
-                android:pathData="M54,24 C60,24 64,30 64,36 C64,42 60,48 54,48 C48,48 44,42 44,36 C44,30 48,24 54,24 Z" />
-        </group>
-        <group android:rotation="144" android:pivotX="54" android:pivotY="54">
-            <path
-                android:fillColor="#EC407A"
-                android:pathData="M54,24 C60,24 64,30 64,36 C64,42 60,48 54,48 C48,48 44,42 44,36 C44,30 48,24 54,24 Z" />
-        </group>
-        <group android:rotation="216" android:pivotX="54" android:pivotY="54">
-            <path
-                android:fillColor="#EC407A"
-                android:pathData="M54,24 C60,24 64,30 64,36 C64,42 60,48 54,48 C48,48 44,42 44,36 C44,30 48,24 54,24 Z" />
-        </group>
-        <group android:rotation="288" android:pivotX="54" android:pivotY="54">
-            <path
-                android:fillColor="#EC407A"
-                android:pathData="M54,24 C60,24 64,30 64,36 C64,42 60,48 54,48 C48,48 44,42 44,36 C44,30 48,24 54,24 Z" />
-        </group>
-        <path
-            android:fillColor="#FDD835"
-            android:pathData="M54,54 m-9,0 a9,9 0 1,1 18,0 a9,9 0 1,1 -18,0" />
-    </group>
+
+    <!-- Corpo della nota con angolo piegato in alto a destra -->
+    <path
+        android:fillColor="#FAFAFA"
+        android:pathData="M36,22 H62 L82,42 V82 A8,8 0 0 1 74,90 H36 A8,8 0 0 1 28,82 V30 A8,8 0 0 1 36,22 Z" />
+    <path
+        android:fillColor="#BDBDBD"
+        android:pathData="M62,22 L82,42 H66 A4,4 0 0 1 62,38 Z" />
+
+    <!-- Petali attorno alla capsula del microfono -->
+    <path android:fillColor="#F48FB1" android:pathData="M66,54 m-6,0 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0" />
+    <path android:fillColor="#F48FB1" android:pathData="M60.5,63.5 m-6,0 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0" />
+    <path android:fillColor="#F48FB1" android:pathData="M49.5,63.5 m-6,0 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0" />
+    <path android:fillColor="#F48FB1" android:pathData="M44,54 m-6,0 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0" />
+    <path android:fillColor="#F48FB1" android:pathData="M49.5,44.5 m-6,0 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0" />
+    <path android:fillColor="#F48FB1" android:pathData="M60.5,44.5 m-6,0 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0" />
+
+    <!-- Capsula del microfono (cuore del fiore) -->
+    <path
+        android:fillColor="#D81B60"
+        android:pathData="M55,42 a7,7 0 0 1 7,7 v8 a7,7 0 0 1 -14,0 v-8 a7,7 0 0 1 7,-7 z" />
+
+    <!-- Archetto, stelo e base del microfono -->
+    <path
+        android:strokeColor="#D81B60"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M44,56 C44,63.5 48.5,68 55,68 C61.5,68 66,63.5 66,56" />
+    <path
+        android:strokeColor="#D81B60"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M55,68 L55,74" />
+    <path
+        android:strokeColor="#D81B60"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M47,77 L63,77" />
 </vector>

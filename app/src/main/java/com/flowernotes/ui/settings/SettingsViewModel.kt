@@ -26,6 +26,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         private set
     var model by mutableStateOf(GeminiModels.DEFAULT)
         private set
+    var dynamicColor by mutableStateOf(true)
+        private set
     var loaded by mutableStateOf(false)
         private set
     var feedback by mutableStateOf<String?>(null)
@@ -37,6 +39,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             apiKeyInput = s.geminiKey
             savedKeyExists = s.geminiKey.isNotBlank()
             model = s.geminiModel
+            dynamicColor = s.dynamicColor
             loaded = true
         }
     }
@@ -63,6 +66,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun selectModel(newModel: String) {
         model = newModel
         viewModelScope.launch { settingsRepository.setGeminiModel(newModel) }
+    }
+
+    fun onDynamicColorChange(enabled: Boolean) {
+        dynamicColor = enabled
+        viewModelScope.launch { settingsRepository.setDynamicColor(enabled) }
     }
 
     fun consumeFeedback(): String? = feedback.also { feedback = null }

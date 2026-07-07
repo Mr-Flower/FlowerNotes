@@ -97,7 +97,9 @@ Unica implementazione: `GeminiProvider`. Il prompt condiviso è in `llm/Extracti
 - [x] Schermata lista attività
 - [x] Inserimento manuale
 - [x] CI GitHub Actions + release APK firmato
+- [x] Quick Settings Tile (apre l'app in modalità ascolto via EXTRA_START_LISTENING)
+- [x] Date/time picker Material 3 nella schermata di conferma
+- [x] Toggle colori dinamici Material You (default on; fallback palette rosa)
+- [x] Icona AMOLED: mic-fiore dentro una nota, sfondo nero, variante monochrome
 - [ ] Test end-to-end su telefono fisico (voce → LLM → calendario)
-- [ ] Quick Settings Tile
-- [ ] Date/time picker Material 3 nella schermata di conferma (ora campi testuali)
 - [ ] Google Calendar API v3 + OAuth (opzionale, per calendari non sul dispositivo)

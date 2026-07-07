@@ -1,6 +1,7 @@
 package com.flowernotes.data
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -18,17 +19,20 @@ private val Context.settingsDataStore by preferencesDataStore(name = "settings")
 data class Settings(
     val geminiKey: String = "",
     val geminiModel: String = GeminiModels.DEFAULT,
+    val dynamicColor: Boolean = true,
 )
 
 class SettingsRepository(private val context: Context) {
 
     private val geminiKeyPref = stringPreferencesKey("gemini_api_key")
     private val geminiModelPref = stringPreferencesKey("gemini_model")
+    private val dynamicColorPref = booleanPreferencesKey("dynamic_color")
 
     val settings: Flow<Settings> = context.settingsDataStore.data.map { prefs ->
         Settings(
             geminiKey = prefs[geminiKeyPref] ?: "",
             geminiModel = prefs[geminiModelPref] ?: GeminiModels.DEFAULT,
+            dynamicColor = prefs[dynamicColorPref] ?: true,
         )
     }
 
@@ -38,5 +42,9 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setGeminiModel(model: String) {
         context.settingsDataStore.edit { it[geminiModelPref] = model }
+    }
+
+    suspend fun setDynamicColor(enabled: Boolean) {
+        context.settingsDataStore.edit { it[dynamicColorPref] = enabled }
     }
 }

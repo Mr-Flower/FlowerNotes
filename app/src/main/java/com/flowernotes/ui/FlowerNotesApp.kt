@@ -1,6 +1,7 @@
 package com.flowernotes.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,8 +25,15 @@ object Routes {
 }
 
 @Composable
-fun FlowerNotesApp() {
+fun FlowerNotesApp(startListenTrigger: Int = 0) {
     val navController = rememberNavController()
+
+    // Il Quick Tile porta sempre alla Home, dove parte l'ascolto
+    LaunchedEffect(startListenTrigger) {
+        if (startListenTrigger > 0) {
+            navController.popBackStack(Routes.HOME, inclusive = false)
+        }
+    }
 
     NavHost(navController = navController, startDestination = Routes.HOME) {
         composable(Routes.HOME) {
@@ -34,6 +42,7 @@ fun FlowerNotesApp() {
                 onOpenManual = { navController.navigate(Routes.MANUAL) },
                 onOpenList = { navController.navigate(Routes.LIST) },
                 onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                startListenTrigger = startListenTrigger,
             )
         }
         composable(Routes.MANUAL) {

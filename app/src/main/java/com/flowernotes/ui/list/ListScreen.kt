@@ -3,9 +3,12 @@ package com.flowernotes.ui.list
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Event
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -20,6 +24,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,6 +35,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.flowernotes.data.SavedEvent
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,46 +81,88 @@ fun ListScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
-                contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(events, key = { it.id }) { event ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(event.titolo, style = MaterialTheme.typography.titleMedium)
-                                Text(
-                                    "${event.data} · ${event.ora}" +
-                                        if (event.luogo.isNotBlank()) " · ${event.luogo}" else "",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
+                    EventListCard(
+                        event = event,
+                        onOpen = {
+                            try {
+                                context.startActivity(viewModel.viewIntent(event))
+                            } catch (e: Exception) {
+                                // nessuna app calendario disponibile: ignora
                             }
-                            IconButton(onClick = {
-                                try {
-                                    context.startActivity(viewModel.viewIntent(event))
-                                } catch (e: Exception) {
-                                    // nessuna app calendario disponibile: ignora
-                                }
-                            }) {
-                                Icon(Icons.Default.Event, contentDescription = "Apri nel calendario")
-                            }
-                            IconButton(onClick = { viewModel.delete(event) }) {
-                                Icon(
-                                    Icons.Default.Delete,
-                                    contentDescription = "Elimina",
-                                    tint = MaterialTheme.colorScheme.error,
-                                )
-                            }
-                        }
-                    }
+                        },
+                        onDelete = { viewModel.delete(event) },
+                    )
                 }
             }
         }
     }
+}
+
+@Composable
+private fun EventListCard(
+    event: SavedEvent,
+    onOpen: () -> Unit,
+    onDelete: () -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Testi a piena larghezza: niente più date tagliate
+            Text(event.titolo, style = MaterialTheme.typography.titleMedium)
+            Spacer(Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    Icons.Default.Event,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 6.dp),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    formatDateTime(event),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            if (event.luogo.isNotBlank()) {
+                Spacer(Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Place,
+                        contentDescription = null,
+                        modifier = Modifier.padding(end = 6.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        event.luogo,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+            ) {
+                TextButton(onClick = onOpen) { Text("Apri") }
+                TextButton(onClick = onDelete) {
+                    Text("Elimina", color = MaterialTheme.colorScheme.error)
+                }
+            }
+        }
+    }
+}
+
+/** "2026-07-08" + "15:00" → "Mercoledì 8 luglio · 15:00" */
+private fun formatDateTime(event: SavedEvent): String {
+    val dateText = try {
+        LocalDate.parse(event.data)
+            .format(DateTimeFormatter.ofPattern("EEEE d MMMM yyyy", Locale.ITALIAN))
+            .replaceFirstChar { it.uppercase() }
+    } catch (e: Exception) {
+        event.data
+    }
+    return "$dateText · ${event.ora}"
 }
