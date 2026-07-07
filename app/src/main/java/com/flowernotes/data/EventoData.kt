@@ -12,7 +12,7 @@ data class EventoData(
     val data: String = "",
     val ora: String = "09:00",
     val durataMinuti: Int = 60,
-    val reminderMinuti: Int = 30,
+    val reminderMinuti: Int = 60,
     val luogo: String = "",
 ) {
     fun toJson(): String = JSONObject().apply {
@@ -35,7 +35,7 @@ data class EventoData(
                 data = o.optString("data", ""),
                 ora = o.optString("ora", "09:00").ifBlank { "09:00" },
                 durataMinuti = o.optInt("durata_minuti", 60),
-                reminderMinuti = o.optInt("reminder_minuti", 30),
+                reminderMinuti = o.optInt("reminder_minuti", 60),
                 luogo = if (o.isNull("luogo")) "" else o.optString("luogo", ""),
             )
         }

@@ -33,7 +33,7 @@ class ConfirmViewModel(application: Application) : AndroidViewModel(application)
     var data by mutableStateOf("")
     var ora by mutableStateOf("")
     var durataMinuti by mutableStateOf("60")
-    var reminderMinuti by mutableStateOf("30")
+    var reminderMinuti by mutableStateOf("60")
     var luogo by mutableStateOf("")
 
     var uiState by mutableStateOf<ConfirmUiState>(ConfirmUiState.Editing)

@@ -1,18 +1,24 @@
 package com.flowernotes.ui.settings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
@@ -27,9 +33,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -41,17 +49,23 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.flowernotes.data.ThemeMode
 import com.flowernotes.llm.GeminiModels
+import com.flowernotes.ui.theme.Accents
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onOpenInfo: () -> Unit,
     viewModel: SettingsViewModel = viewModel(),
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
@@ -71,6 +85,11 @@ fun SettingsScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Indietro")
                     }
                 },
+                actions = {
+                    IconButton(onClick = onOpenInfo) {
+                        Icon(Icons.Default.Info, contentDescription = "Informazioni sull'app")
+                    }
+                },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -85,140 +104,281 @@ fun SettingsScreen(
         ) {
             if (!viewModel.loaded) return@Column
 
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text("API key di Gemini", style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        "Crea la tua chiave gratuita su aistudio.google.com/apikey. " +
-                            "Resta salvata solo su questo dispositivo.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    OutlinedTextField(
-                        value = viewModel.apiKeyInput,
-                        onValueChange = { viewModel.apiKeyInput = it },
-                        label = { Text("API key") },
-                        singleLine = true,
-                        visualTransformation = if (showKey) {
-                            VisualTransformation.None
-                        } else {
-                            PasswordVisualTransformation()
-                        },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        trailingIcon = {
-                            IconButton(onClick = { showKey = !showKey }) {
-                                Icon(
-                                    if (showKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = if (showKey) "Nascondi chiave" else "Mostra chiave",
-                                )
-                            }
-                        },
-                        supportingText = {
-                            Text(
-                                if (viewModel.savedKeyExists) "Chiave configurata ✓"
-                                else "Nessuna chiave salvata"
+            ThemeCard(viewModel)
+            ApiKeyCard(viewModel, showKey, onToggleShowKey = { showKey = !showKey })
+            ModelCard(viewModel)
+            EventDefaultsCard(viewModel)
+        }
+    }
+}
+
+/** Selettore accento colore (dinamico Material You o predefiniti) e tema chiaro/scuro */
+@Composable
+private fun ThemeCard(viewModel: SettingsViewModel) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text("Tema", style = MaterialTheme.typography.titleMedium)
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                if (Accents.dynamicAvailable()) {
+                    AccentSwatch(
+                        label = "Dinamico",
+                        selected = viewModel.accent == Accents.DYNAMIC,
+                        brush = Brush.sweepGradient(
+                            listOf(
+                                Color(0xFFE53935), Color(0xFFEF8F00), Color(0xFF43A047),
+                                Color(0xFF1E88E5), Color(0xFF6750A4), Color(0xFFE53935),
                             )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
+                        ),
+                        onClick = { viewModel.selectAccent(Accents.DYNAMIC) },
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        Button(
-                            onClick = { viewModel.saveKey() },
-                            modifier = Modifier.weight(1f),
-                        ) {
-                            Icon(Icons.Default.Check, contentDescription = null)
-                            Text(" Salva")
-                        }
-                        OutlinedButton(
-                            onClick = { viewModel.clearKey() },
-                            modifier = Modifier.weight(1f),
-                            enabled = viewModel.savedKeyExists || viewModel.apiKeyInput.isNotEmpty(),
-                        ) {
-                            Icon(Icons.Default.Delete, contentDescription = null)
-                            Text(" Rimuovi")
-                        }
-                    }
                 }
-            }
-
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Colori Material You", style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            "Usa l'accento del telefono (Android 12+). Disattivalo per la palette rosa dell'app.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                    Switch(
-                        checked = viewModel.dynamicColor,
-                        onCheckedChange = { viewModel.onDynamicColorChange(it) },
+                Accents.OPTIONS.forEach { option ->
+                    AccentSwatch(
+                        label = option.label,
+                        selected = viewModel.accent == option.id,
+                        brush = Brush.linearGradient(listOf(option.seed, option.seed)),
+                        onClick = { viewModel.selectAccent(option.id) },
                     )
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth()) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text("Modello", style = MaterialTheme.typography.titleMedium)
-                    var expanded by remember { mutableStateOf(false) }
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = it },
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                ThemeMode.entries.forEachIndexed { index, mode ->
+                    SegmentedButton(
+                        selected = viewModel.themeMode == mode,
+                        onClick = { viewModel.selectThemeMode(mode) },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = ThemeMode.entries.size,
+                        ),
                     ) {
-                        OutlinedTextField(
-                            value = viewModel.model,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Modello Gemini") },
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                            },
-                            supportingText = {
-                                Text(
-                                    GeminiModels.AVAILABLE
-                                        .firstOrNull { it.first == viewModel.model }?.second
-                                        ?: ""
-                                )
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(),
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                        ) {
-                            GeminiModels.AVAILABLE.forEach { (id, description) ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Column {
-                                            Text(id, style = MaterialTheme.typography.bodyLarge)
-                                            Text(
-                                                description,
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            )
-                                        }
-                                    },
-                                    onClick = {
-                                        viewModel.selectModel(id)
-                                        expanded = false
-                                    },
-                                )
-                            }
-                        }
+                        Text(mode.label)
                     }
                 }
+            }
+        }
+    }
+}
+
+/** Pallino colore selezionabile, come nei selettori tema delle app Material You */
+@Composable
+private fun AccentSwatch(
+    label: String,
+    selected: Boolean,
+    brush: Brush,
+    onClick: () -> Unit,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+                .background(brush),
+            contentAlignment = Alignment.Center,
+        ) {
+            androidx.compose.material3.Surface(
+                onClick = onClick,
+                shape = CircleShape,
+                color = Color.Transparent,
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                if (selected) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = "$label selezionato",
+                            tint = Color.White,
+                        )
+                    }
+                }
+            }
+        }
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = if (selected) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+        )
+    }
+}
+
+@Composable
+private fun ApiKeyCard(
+    viewModel: SettingsViewModel,
+    showKey: Boolean,
+    onToggleShowKey: () -> Unit,
+) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text("API key di Gemini", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Crea la tua chiave gratuita su aistudio.google.com/apikey. " +
+                    "Resta salvata solo su questo dispositivo.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedTextField(
+                value = viewModel.apiKeyInput,
+                onValueChange = { viewModel.apiKeyInput = it },
+                label = { Text("API key") },
+                singleLine = true,
+                visualTransformation = if (showKey) {
+                    VisualTransformation.None
+                } else {
+                    PasswordVisualTransformation()
+                },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = {
+                    IconButton(onClick = onToggleShowKey) {
+                        Icon(
+                            if (showKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (showKey) "Nascondi chiave" else "Mostra chiave",
+                        )
+                    }
+                },
+                supportingText = {
+                    Text(
+                        if (viewModel.savedKeyExists) "Chiave configurata ✓"
+                        else "Nessuna chiave salvata"
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Button(
+                    onClick = { viewModel.saveKey() },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Icon(Icons.Default.Check, contentDescription = null)
+                    Text(" Salva")
+                }
+                OutlinedButton(
+                    onClick = { viewModel.clearKey() },
+                    modifier = Modifier.weight(1f),
+                    enabled = viewModel.savedKeyExists || viewModel.apiKeyInput.isNotEmpty(),
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = null)
+                    Text(" Rimuovi")
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ModelCard(viewModel: SettingsViewModel) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text("Modello", style = MaterialTheme.typography.titleMedium)
+            var expanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it },
+            ) {
+                // Campo editabile: si può anche digitare l'id di un modello
+                // non ancora in lista (es. versioni future)
+                OutlinedTextField(
+                    value = viewModel.model,
+                    onValueChange = { viewModel.selectModel(it) },
+                    label = { Text("Modello Gemini") },
+                    singleLine = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    supportingText = {
+                        Text(
+                            GeminiModels.AVAILABLE
+                                .firstOrNull { it.first == viewModel.model }?.second
+                                ?: "Modello personalizzato"
+                        )
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                ) {
+                    GeminiModels.AVAILABLE.forEach { (id, description) ->
+                        DropdownMenuItem(
+                            text = {
+                                Column {
+                                    Text(id, style = MaterialTheme.typography.bodyLarge)
+                                    Text(
+                                        description,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            },
+                            onClick = {
+                                viewModel.selectModel(id)
+                                expanded = false
+                            },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Durata e promemoria predefiniti per i nuovi eventi */
+@Composable
+private fun EventDefaultsCard(viewModel: SettingsViewModel) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text("Nuovi eventi", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Valori usati quando non li specifichi a voce.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = viewModel.durationInput,
+                    onValueChange = { viewModel.onDurationChange(it) },
+                    label = { Text("Durata") },
+                    supportingText = { Text("minuti") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                )
+                OutlinedTextField(
+                    value = viewModel.reminderInput,
+                    onValueChange = { viewModel.onReminderChange(it) },
+                    label = { Text("Avviso") },
+                    supportingText = { Text("minuti prima") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                )
             }
         }
     }

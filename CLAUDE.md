@@ -1,4 +1,6 @@
-# CLAUDE.md — Flower Notes
+# CLAUDE.md — FlowerNotes
+
+> Il nome dell'app si scrive **FlowerNotes** (tutto attaccato), decisione dell'utente.
 
 Questo file fornisce contesto persistente a Claude Code per questo progetto. Aggiornalo man mano che le decisioni si consolidano.
 
@@ -69,6 +71,12 @@ Unica implementazione: `GeminiProvider`. Il prompt condiviso è in `llm/Extracti
 - Per rilasciare: aggiornare `versionCode`/`versionName` in `app/build.gradle.kts`, poi
   `git tag vX.Y.Z && git push --tags`
 - Minify (R8) disattivato nella v0.x: riattivarlo più avanti con test su dispositivo
+- **Processo attuale (dal 2026-07-07, su richiesta dell'utente)**: si itera
+  ripubblicando sempre la release **v0.5.0** (eliminare release+tag con
+  `gh release delete v0.5.0 -y --cleanup-tag`, poi ritaggare e pushare) finché
+  l'utente non dichiara chiusa questa fase. **Chiedere SEMPRE conferma
+  all'utente prima di pushare/ripubblicare una release.**
+- Licenza: MIT (file LICENSE, mostrata anche nella pagina Info dell'app)
 
 ## Ambiente di sviluppo
 

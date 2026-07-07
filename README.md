@@ -1,6 +1,6 @@
-# 🌸 Flower Notes
+# 🌸 FlowerNotes
 
-App Android che trasforma la voce in eventi di calendario: detta un impegno in italiano ("devo andare dal barbiere domani alle 15") e Flower Notes lo interpreta con un LLM, ti fa confermare i dettagli e lo salva sul calendario del telefono (sincronizzato con Google Calendar).
+App Android che trasforma la voce in eventi di calendario: detta un impegno in italiano ("devo andare dal barbiere domani alle 15") e FlowerNotes lo interpreta con un LLM, ti fa confermare i dettagli e lo salva sul calendario del telefono (sincronizzato con Google Calendar).
 
 ## Download
 
@@ -36,3 +36,7 @@ Requisiti: JDK 17 e Android SDK (compileSdk 35).
 ## Stack
 
 Kotlin · Jetpack Compose · Material 3 · SpeechRecognizer · CalendarContract · DataStore
+
+## Licenza
+
+FlowerNotes è software libero distribuito con licenza [MIT](LICENSE).

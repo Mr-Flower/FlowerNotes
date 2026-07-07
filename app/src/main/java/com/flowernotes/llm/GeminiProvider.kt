@@ -7,13 +7,15 @@ import org.json.JSONObject
 class GeminiProvider(
     private val apiKey: String,
     private val model: String = GeminiModels.DEFAULT,
+    private val durataDefault: Int = 60,
+    private val reminderDefault: Int = 60,
 ) : LlmProvider {
 
     override suspend fun estraiEvento(testo: String): EventoData {
         val body = JSONObject().apply {
             put("contents", JSONArray().put(
                 JSONObject().put("parts", JSONArray().put(
-                    JSONObject().put("text", ExtractionPrompt.build(testo))
+                    JSONObject().put("text", ExtractionPrompt.build(testo, durataDefault, reminderDefault))
                 ))
             ))
             // Chiediamo direttamente output JSON

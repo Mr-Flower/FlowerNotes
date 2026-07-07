@@ -5,12 +5,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.flowernotes.data.Settings
 import com.flowernotes.data.SettingsRepository
+import com.flowernotes.data.ThemeMode
 import com.flowernotes.ui.FlowerNotesApp
 import com.flowernotes.ui.theme.FlowerNotesTheme
 
@@ -27,7 +29,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settings by settingsRepository.settings
                 .collectAsStateWithLifecycle(initialValue = Settings())
-            FlowerNotesTheme(dynamicColor = settings.dynamicColor) {
+            val darkTheme = when (settings.themeMode) {
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+            }
+            FlowerNotesTheme(darkTheme = darkTheme, accent = settings.accent) {
                 FlowerNotesApp(startListenTrigger = listenTrigger)
             }
         }

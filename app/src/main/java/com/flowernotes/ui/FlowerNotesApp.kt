@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.flowernotes.data.EventoData
 import com.flowernotes.ui.confirm.ConfirmScreen
 import com.flowernotes.ui.home.HomeScreen
+import com.flowernotes.ui.info.InfoScreen
 import com.flowernotes.ui.list.ListScreen
 import com.flowernotes.ui.manual.ManualScreen
 import com.flowernotes.ui.settings.SettingsScreen
@@ -19,6 +20,7 @@ object Routes {
     const val MANUAL = "manual"
     const val LIST = "list"
     const val SETTINGS = "settings"
+    const val INFO = "info"
     const val CONFIRM = "confirm/{eventoJson}"
 
     fun confirm(evento: EventoData) = "confirm/${evento.toNavArg()}"
@@ -75,7 +77,13 @@ fun FlowerNotesApp(startListenTrigger: Int = 0) {
             ListScreen(onBack = { navController.popBackStack() })
         }
         composable(Routes.SETTINGS) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenInfo = { navController.navigate(Routes.INFO) },
+            )
+        }
+        composable(Routes.INFO) {
+            InfoScreen(onBack = { navController.popBackStack() })
         }
     }
 }

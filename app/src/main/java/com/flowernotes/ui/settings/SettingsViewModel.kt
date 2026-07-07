@@ -7,14 +7,16 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.flowernotes.data.SettingsRepository
+import com.flowernotes.data.ThemeMode
 import com.flowernotes.llm.GeminiModels
+import com.flowernotes.ui.theme.Accents
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
- * Il campo della API key usa uno stato locale e un salvataggio esplicito:
- * il binding diretto col DataStore (asincrono) causava conflitti tra il testo
- * digitato e quello ri-emesso dal Flow (cursore che salta, cancellazioni che
+ * I campi di testo usano stato locale e salvataggio esplicito: il binding
+ * diretto col DataStore (asincrono) causava conflitti tra il testo digitato
+ * e quello ri-emesso dal Flow (cursore che salta, cancellazioni che
  * "tornano indietro").
  */
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
@@ -26,8 +28,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         private set
     var model by mutableStateOf(GeminiModels.DEFAULT)
         private set
-    var dynamicColor by mutableStateOf(true)
+    var accent by mutableStateOf(Accents.DYNAMIC)
         private set
+    var themeMode by mutableStateOf(ThemeMode.SYSTEM)
+        private set
+    var durationInput by mutableStateOf("60")
+    var reminderInput by mutableStateOf("60")
     var loaded by mutableStateOf(false)
         private set
     var feedback by mutableStateOf<String?>(null)
@@ -39,7 +45,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             apiKeyInput = s.geminiKey
             savedKeyExists = s.geminiKey.isNotBlank()
             model = s.geminiModel
-            dynamicColor = s.dynamicColor
+            accent = s.accent
+            themeMode = s.themeMode
+            durationInput = s.defaultDurationMinutes.toString()
+            reminderInput = s.defaultReminderMinutes.toString()
             loaded = true
         }
     }
@@ -68,9 +77,32 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch { settingsRepository.setGeminiModel(newModel) }
     }
 
-    fun onDynamicColorChange(enabled: Boolean) {
-        dynamicColor = enabled
-        viewModelScope.launch { settingsRepository.setDynamicColor(enabled) }
+    fun selectAccent(newAccent: String) {
+        accent = newAccent
+        viewModelScope.launch { settingsRepository.setAccent(newAccent) }
+    }
+
+    fun selectThemeMode(mode: ThemeMode) {
+        themeMode = mode
+        viewModelScope.launch { settingsRepository.setThemeMode(mode) }
+    }
+
+    fun onDurationChange(value: String) {
+        durationInput = value
+        value.trim().toIntOrNull()?.let { minutes ->
+            if (minutes > 0) {
+                viewModelScope.launch { settingsRepository.setDefaultDuration(minutes) }
+            }
+        }
+    }
+
+    fun onReminderChange(value: String) {
+        reminderInput = value
+        value.trim().toIntOrNull()?.let { minutes ->
+            if (minutes >= 0) {
+                viewModelScope.launch { settingsRepository.setDefaultReminder(minutes) }
+            }
+        }
     }
 
     fun consumeFeedback(): String? = feedback.also { feedback = null }

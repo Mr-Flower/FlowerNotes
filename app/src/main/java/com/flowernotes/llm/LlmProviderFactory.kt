@@ -9,6 +9,11 @@ object LlmProviderFactory {
         if (settings.geminiKey.isBlank()) {
             throw LlmException("Nessuna API key Gemini configurata: aggiungila nelle impostazioni")
         }
-        return GeminiProvider(settings.geminiKey, settings.geminiModel)
+        return GeminiProvider(
+            apiKey = settings.geminiKey,
+            model = settings.geminiModel,
+            durataDefault = settings.defaultDurationMinutes,
+            reminderDefault = settings.defaultReminderMinutes,
+        )
     }
 }
