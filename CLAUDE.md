@@ -108,8 +108,11 @@ Unica implementazione: `GeminiProvider`. Il prompt condiviso è in `llm/Extracti
 - [x] Quick Settings Tile (apre l'app in modalità ascolto via EXTRA_START_LISTENING)
 - [x] Date/time picker Material 3 nella schermata di conferma
 - [x] Toggle colori dinamici Material You (default on; fallback palette rosa)
-- [x] Icona AMOLED dal logo dell'utente (art/logo-reference.png): calendario +
-      tulipano-microfono, ridisegnata a vettori con variante monochrome
+- [x] Icona: logo SVG fornito dall'utente (art/logo.svg, NON modificarlo),
+      rasterizzato nei mipmap perché contiene una maschera raster incorporata.
+      Per rigenerare: rsvg-convert a 260px, centrare su canvas nero 432px
+      (foreground) e su trasparente con alpha=luminanza (monochrome), poi
+      scalare a 324/216/162/108 nei mipmap-*dpi
 - [x] SpeechRecognizer: istanza riusata + retry automatico su
       ERROR_SERVER_DISCONNECTED (codice 11) — NON distruggere/ricreare a ogni avvio
 - [ ] Test end-to-end su telefono fisico (voce → LLM → calendario)
