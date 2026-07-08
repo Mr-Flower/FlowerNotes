@@ -33,6 +33,7 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -55,6 +56,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -118,11 +120,13 @@ fun SettingsScreen(
             ThemeCard(viewModel)
             LanguageCard(viewModel)
             ProviderCard(viewModel)
-            if (viewModel.provider == LlmProviderType.GEMINI) {
-                ApiKeyCard(viewModel)
-                ModelCard(viewModel)
-            } else {
-                OllamaCard(viewModel)
+            when (viewModel.provider) {
+                LlmProviderType.GEMINI -> {
+                    ApiKeyCard(viewModel)
+                    ModelCard(viewModel)
+                }
+                LlmProviderType.OLLAMA -> OllamaCard(viewModel)
+                LlmProviderType.LOCAL -> LocalModelCard(viewModel)
             }
             CalendarCard(viewModel)
             EventDefaultsCard(viewModel)
@@ -314,6 +318,67 @@ private fun ProviderCard(viewModel: SettingsViewModel) {
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Modello locale on-device: istruzioni per scaricare il .task consigliato
+ * e pulsante per importarlo (viene copiato nello storage interno dell'app).
+ */
+@Composable
+private fun LocalModelCard(viewModel: SettingsViewModel) {
+    val strings = LocalStrings.current
+    val uriHandler = LocalUriHandler.current
+    val pickModelLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri -> uri?.let { viewModel.importLocalModel(it) } }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(strings.localTitle, style = MaterialTheme.typography.titleMedium)
+            Text(
+                strings.localHint,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedButton(
+                onClick = { uriHandler.openUri("https://huggingface.co/litert-community/Gemma3-1B-IT") },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(strings.localDownloadButton)
+            }
+            if (viewModel.importingModel) {
+                LinearProgressIndicator(
+                    progress = { viewModel.importProgress },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text(
+                    "${(viewModel.importProgress * 100).toInt()}%",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                Button(
+                    onClick = { pickModelLauncher.launch(arrayOf("*/*")) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(strings.localPickButton)
+                }
+                Text(
+                    if (viewModel.localModelPath.isNotBlank()) {
+                        "${strings.localModelConfigured} (${viewModel.localModelPath.substringAfterLast('/')})"
+                    } else {
+                        strings.localNoModel
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            TestConnectionRow(viewModel)
         }
     }
 }

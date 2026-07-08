@@ -18,6 +18,7 @@ import com.flowernotes.data.ThemeMode
 import com.flowernotes.i18n.I18n
 import com.flowernotes.i18n.LocalStrings
 import com.flowernotes.ui.FlowerNotesApp
+import com.flowernotes.ui.onboarding.OnboardingScreen
 import com.flowernotes.ui.theme.FlowerNotesTheme
 
 class MainActivity : ComponentActivity() {
@@ -35,26 +36,33 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
         val settingsRepository = SettingsRepository(applicationContext)
         setContent {
+            // initialValue null: finché DataStore non ha emesso non decidiamo
+            // nulla (evita il flash dell'onboarding per chi lo ha già fatto)
             val settings by settingsRepository.settings
-                .collectAsStateWithLifecycle(initialValue = Settings())
-            val darkTheme = when (settings.themeMode) {
+                .collectAsStateWithLifecycle(initialValue = null as Settings?)
+            val loaded = settings ?: return@setContent
+            val darkTheme = when (loaded.themeMode) {
                 ThemeMode.LIGHT -> false
                 ThemeMode.DARK -> true
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
             }
             // Allinea il singleton I18n (usato dal codice non-Compose) e le
             // stringhe fornite alla UI con la lingua scelta nelle impostazioni
-            val strings = remember(settings.language) {
-                I18n.language = settings.language
+            val strings = remember(loaded.language) {
+                I18n.language = loaded.language
                 I18n.strings
             }
             CompositionLocalProvider(LocalStrings provides strings) {
-                FlowerNotesTheme(darkTheme = darkTheme, accent = settings.accent) {
-                    FlowerNotesApp(
-                        startListenTrigger = listenTrigger,
-                        sharedTextTrigger = sharedTextTrigger,
-                        sharedText = sharedText,
-                    )
+                FlowerNotesTheme(darkTheme = darkTheme, accent = loaded.accent) {
+                    if (!loaded.onboardingDone) {
+                        OnboardingScreen()
+                    } else {
+                        FlowerNotesApp(
+                            startListenTrigger = listenTrigger,
+                            sharedTextTrigger = sharedTextTrigger,
+                            sharedText = sharedText,
+                        )
+                    }
                 }
             }
         }

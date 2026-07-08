@@ -1,12 +1,13 @@
 package com.flowernotes.llm
 
+import android.content.Context
 import com.flowernotes.data.Settings
 import com.flowernotes.i18n.I18n
 
 object LlmProviderFactory {
 
     /** Crea il provider dalle impostazioni; lancia LlmException se la configurazione è incompleta */
-    fun create(settings: Settings): LlmProvider = when (settings.llmProvider) {
+    fun create(context: Context, settings: Settings): LlmProvider = when (settings.llmProvider) {
         LlmProviderType.GEMINI -> {
             if (settings.geminiKey.isBlank()) {
                 throw LlmException(I18n.strings.llmNoKey)
@@ -25,6 +26,17 @@ object LlmProviderFactory {
             OllamaProvider(
                 baseUrl = settings.ollamaUrl,
                 model = settings.ollamaModel.ifBlank { OllamaProvider.DEFAULT_MODEL },
+                durataDefault = settings.defaultDurationMinutes,
+                reminderDefault = settings.defaultReminderMinutes,
+            )
+        }
+        LlmProviderType.LOCAL -> {
+            if (settings.localModelPath.isBlank()) {
+                throw LlmException(I18n.strings.llmNoLocalModel)
+            }
+            LocalProvider(
+                context = context,
+                modelPath = settings.localModelPath,
                 durataDefault = settings.defaultDurationMinutes,
                 reminderDefault = settings.defaultReminderMinutes,
             )

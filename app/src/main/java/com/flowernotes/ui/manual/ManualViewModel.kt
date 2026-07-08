@@ -20,7 +20,7 @@ sealed interface ManualUiState {
 
 class ManualViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val extractEvent = ExtractEventUseCase(SettingsRepository(application))
+    private val extractEvent = ExtractEventUseCase(application, SettingsRepository(application))
 
     private val _uiState = MutableStateFlow<ManualUiState>(ManualUiState.Idle)
     val uiState: StateFlow<ManualUiState> = _uiState

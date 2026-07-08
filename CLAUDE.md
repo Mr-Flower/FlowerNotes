@@ -40,6 +40,8 @@ Repo GitHub: `Mr-Flower/FlowerNotes` — distribuzione APK via GitHub Releases.
 
 **Aggiunta (2026-07-08)**: secondo provider **Ollama** self-hosted (`llm/OllamaProvider.kt`) — l'utente inserisce nelle impostazioni l'indirizzo del proprio server (es. container sulla LAN, `http://ip:11434`) e il nome del modello. Usa l'endpoint nativo `/api/chat` con `stream:false` e `format:"json"`. Il manifest ha `usesCleartextTraffic="true"` per l'HTTP in chiaro sulla LAN. La scelta del provider è in `Settings.llmProvider` (enum `LlmProviderType`).
 
+**Aggiunta (2026-07-08, sera)**: terzo provider **Locale on-device** (`llm/LocalProvider.kt`) via MediaPipe LLM Inference (`com.google.mediapipe:tasks-genai` — unica dipendenza nativa del progetto, motivo: richiesta esplicita dell'utente di un LLM senza cloud). Modello consigliato: **Gemma 3 1B int4** (~550 MB, file `.task` da litert-community su Hugging Face); l'utente lo scarica a mano (la licenza Gemma richiede login HF) e lo importa via SAF — `llm/LocalModelImporter.kt` lo copia in `filesDir/models/`. L'engine è cachato per percorso (l'init costa secondi). `abiFilters arm64-v8a` nel build per contenere l'APK (44 MB invece di 122). **Onboarding** al primo avvio (`ui/onboarding/`): benvenuto → permessi → scelta provider → configurazione guidata; flag `onboardingDone` in DataStore, gate in MainActivity (initialValue null per evitare flash).
+
 Interfaccia comune (`llm/LlmProvider.kt`):
 ```kotlin
 interface LlmProvider {

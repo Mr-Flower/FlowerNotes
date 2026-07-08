@@ -98,6 +98,34 @@ data class Strings(
     val testConnectionButton: String,
     val testConnectionRunning: String,
     val testConnectionOk: String,
+    // Modello locale on-device
+    val localTitle: String,
+    val localHint: String,
+    val localDownloadButton: String,
+    val localPickButton: String,
+    val localModelConfigured: String,
+    val localNoModel: String,
+    val localModelImported: String,
+    val localImportFailed: String,
+    // Onboarding
+    val onbSkip: String,
+    val onbStart: String,
+    val onbNext: String,
+    val onbDone: String,
+    val onbGrant: String,
+    val onbGranted: String,
+    val onbPermTitle: String,
+    val onbPermText: String,
+    val onbMicPerm: String,
+    val onbCalPerm: String,
+    val onbProviderTitle: String,
+    val onbGeminiDesc: String,
+    val onbOllamaDesc: String,
+    val onbLocalDesc: String,
+    val onbGeminiHow: String,
+    val onbOpenAiStudio: String,
+    val onbOllamaHow: String,
+    val onbLocalHow: String,
     val calendarPickerTitle: String,
     val calendarPickerHint: String,
     val calendarAutomatic: String,
@@ -131,6 +159,8 @@ data class Strings(
     // Errori LLM/rete/calendario
     val llmNoKey: String,
     val llmNoOllamaUrl: String,
+    val llmNoLocalModel: String,
+    val localInferenceError: String,
     val llmInvalidResponse: String,
     val llmParseFailed: String,
     val llmUnexpectedFormat: String,
@@ -252,9 +282,10 @@ val ItalianStrings = Strings(
     ),
     providerTitle = "Provider LLM",
     providerHint = "Gemini usa il cloud di Google con la tua API key. " +
-        "Ollama usa un server sulla tua rete: nessun dato lascia casa tua.",
+        "Ollama usa un server sulla tua rete. Locale fa girare il modello " +
+        "direttamente sul telefono, senza internet.",
     providerNames = mapOf(
-        "gemini" to "Gemini", "ollama" to "Ollama",
+        "gemini" to "Gemini", "ollama" to "Ollama", "local" to "Locale",
     ),
     ollamaHint = "Indirizzo del tuo server Ollama (es. http://192.168.1.10:11434) " +
         "e nome del modello da usare. Il telefono deve poter raggiungere il server.",
@@ -266,6 +297,44 @@ val ItalianStrings = Strings(
     testConnectionButton = "Prova connessione",
     testConnectionRunning = "Verifica in corso…",
     testConnectionOk = "Connessione riuscita ✓",
+    localTitle = "Modello locale",
+    localHint = "Il modello gira sul telefono: nessun dato lascia il dispositivo. " +
+        "Consigliato: Gemma 3 1B int4 (~550 MB, file .task). Serve un telefono " +
+        "recente con almeno 4 GB di RAM; la risposta richiede qualche secondo.",
+    localDownloadButton = "Apri pagina del modello",
+    localPickButton = "Importa file modello",
+    localModelConfigured = "Modello importato ✓",
+    localNoModel = "Nessun modello importato",
+    localModelImported = "Modello importato",
+    localImportFailed = "Importazione fallita",
+    onbSkip = "Salta",
+    onbStart = "Inizia",
+    onbNext = "Avanti",
+    onbDone = "Fine",
+    onbGrant = "Concedi",
+    onbGranted = "Concesso",
+    onbPermTitle = "Permessi",
+    onbPermText = "FlowerNotes ha bisogno del microfono per ascoltarti e del " +
+        "calendario per creare gli eventi. Puoi concederli anche più tardi.",
+    onbMicPerm = "Microfono — per dettare gli eventi",
+    onbCalPerm = "Calendario — per creare gli eventi",
+    onbProviderTitle = "Chi interpreta le tue parole?",
+    onbGeminiDesc = "Cloud Google, gratuito con la tua API key. Il più semplice.",
+    onbOllamaDesc = "Un server sulla tua rete (es. container Docker). Dati in casa tua.",
+    onbLocalDesc = "Il modello gira sul telefono. Nessun internet, massima privacy.",
+    onbGeminiHow = "1. Apri AI Studio col pulsante qui sotto\n" +
+        "2. Accedi col tuo account Google\n" +
+        "3. Tocca \"Create API key\" e copia la chiave\n" +
+        "4. Incollala qui sotto",
+    onbOpenAiStudio = "Apri AI Studio",
+    onbOllamaHow = "1. Installa Ollama sul tuo PC o server (ollama.com)\n" +
+        "2. Scarica un modello: ollama pull llama3.2\n" +
+        "3. Assicurati che la porta 11434 sia raggiungibile dal telefono\n" +
+        "4. Inserisci qui l'indirizzo del server",
+    onbLocalHow = "1. Apri la pagina del modello col pulsante qui sotto\n" +
+        "2. Accedi a Hugging Face (account gratuito) e accetta la licenza Gemma\n" +
+        "3. Scarica il file gemma3-1b-it-int4.task (~550 MB)\n" +
+        "4. Importalo con il pulsante qui sotto",
     calendarPickerTitle = "Calendario di destinazione",
     calendarPickerHint = "Dove finiscono i nuovi eventi. Con Automatico viene " +
         "usato il calendario principale dell'account Google.",
@@ -303,6 +372,8 @@ val ItalianStrings = Strings(
     speechGenericError = "Errore del riconoscimento vocale",
     llmNoKey = "Nessuna API key Gemini configurata: aggiungila nelle impostazioni",
     llmNoOllamaUrl = "Nessun indirizzo del server Ollama configurato: aggiungilo nelle impostazioni",
+    llmNoLocalModel = "Nessun modello locale importato: aggiungilo nelle impostazioni",
+    localInferenceError = "Errore del modello locale",
     llmInvalidResponse = "Risposta del modello non valida: JSON non trovato",
     llmParseFailed = "Impossibile interpretare la risposta del modello",
     llmUnexpectedFormat = "Risposta Gemini in formato inatteso",
@@ -424,9 +495,10 @@ val EnglishStrings = Strings(
     ),
     providerTitle = "LLM provider",
     providerHint = "Gemini uses Google's cloud with your API key. " +
-        "Ollama uses a server on your own network: no data leaves your home.",
+        "Ollama uses a server on your own network. Local runs the model " +
+        "directly on the phone, no internet needed.",
     providerNames = mapOf(
-        "gemini" to "Gemini", "ollama" to "Ollama",
+        "gemini" to "Gemini", "ollama" to "Ollama", "local" to "Local",
     ),
     ollamaHint = "Address of your Ollama server (e.g. http://192.168.1.10:11434) " +
         "and the model to use. The phone must be able to reach the server.",
@@ -438,6 +510,44 @@ val EnglishStrings = Strings(
     testConnectionButton = "Test connection",
     testConnectionRunning = "Testing…",
     testConnectionOk = "Connection successful ✓",
+    localTitle = "Local model",
+    localHint = "The model runs on the phone: no data leaves the device. " +
+        "Recommended: Gemma 3 1B int4 (~550 MB, .task file). Needs a recent " +
+        "phone with at least 4 GB of RAM; answers take a few seconds.",
+    localDownloadButton = "Open model page",
+    localPickButton = "Import model file",
+    localModelConfigured = "Model imported ✓",
+    localNoModel = "No model imported",
+    localModelImported = "Model imported",
+    localImportFailed = "Import failed",
+    onbSkip = "Skip",
+    onbStart = "Get started",
+    onbNext = "Next",
+    onbDone = "Done",
+    onbGrant = "Grant",
+    onbGranted = "Granted",
+    onbPermTitle = "Permissions",
+    onbPermText = "FlowerNotes needs the microphone to listen to you and the " +
+        "calendar to create events. You can also grant them later.",
+    onbMicPerm = "Microphone — to dictate events",
+    onbCalPerm = "Calendar — to create events",
+    onbProviderTitle = "Who interprets your words?",
+    onbGeminiDesc = "Google cloud, free with your API key. The simplest option.",
+    onbOllamaDesc = "A server on your own network (e.g. Docker container). Data stays home.",
+    onbLocalDesc = "The model runs on the phone. No internet, maximum privacy.",
+    onbGeminiHow = "1. Open AI Studio with the button below\n" +
+        "2. Sign in with your Google account\n" +
+        "3. Tap \"Create API key\" and copy the key\n" +
+        "4. Paste it below",
+    onbOpenAiStudio = "Open AI Studio",
+    onbOllamaHow = "1. Install Ollama on your PC or server (ollama.com)\n" +
+        "2. Pull a model: ollama pull llama3.2\n" +
+        "3. Make sure port 11434 is reachable from the phone\n" +
+        "4. Enter the server address here",
+    onbLocalHow = "1. Open the model page with the button below\n" +
+        "2. Sign in to Hugging Face (free account) and accept the Gemma license\n" +
+        "3. Download the gemma3-1b-it-int4.task file (~550 MB)\n" +
+        "4. Import it with the button below",
     calendarPickerTitle = "Destination calendar",
     calendarPickerHint = "Where new events are created. With Automatic, the " +
         "primary calendar of the Google account is used.",
@@ -475,6 +585,8 @@ val EnglishStrings = Strings(
     speechGenericError = "Speech recognition error",
     llmNoKey = "No Gemini API key configured: add it in the settings",
     llmNoOllamaUrl = "No Ollama server address configured: add it in the settings",
+    llmNoLocalModel = "No local model imported: add it in the settings",
+    localInferenceError = "Local model error",
     llmInvalidResponse = "Invalid model response: JSON not found",
     llmParseFailed = "Could not parse the model response",
     llmUnexpectedFormat = "Unexpected Gemini response format",
@@ -596,9 +708,10 @@ val FrenchStrings = Strings(
     ),
     providerTitle = "Fournisseur LLM",
     providerHint = "Gemini utilise le cloud de Google avec votre clé API. " +
-        "Ollama utilise un serveur sur votre propre réseau : aucune donnée ne quitte chez vous.",
+        "Ollama utilise un serveur sur votre réseau. Local exécute le modèle " +
+        "directement sur le téléphone, sans internet.",
     providerNames = mapOf(
-        "gemini" to "Gemini", "ollama" to "Ollama",
+        "gemini" to "Gemini", "ollama" to "Ollama", "local" to "Local",
     ),
     ollamaHint = "Adresse de votre serveur Ollama (ex. http://192.168.1.10:11434) " +
         "et modèle à utiliser. Le téléphone doit pouvoir joindre le serveur.",
@@ -610,6 +723,45 @@ val FrenchStrings = Strings(
     testConnectionButton = "Tester la connexion",
     testConnectionRunning = "Vérification…",
     testConnectionOk = "Connexion réussie ✓",
+    localTitle = "Modèle local",
+    localHint = "Le modèle s'exécute sur le téléphone : aucune donnée ne quitte " +
+        "l'appareil. Recommandé : Gemma 3 1B int4 (~550 Mo, fichier .task). " +
+        "Nécessite un téléphone récent avec au moins 4 Go de RAM ; la réponse " +
+        "prend quelques secondes.",
+    localDownloadButton = "Ouvrir la page du modèle",
+    localPickButton = "Importer le fichier du modèle",
+    localModelConfigured = "Modèle importé ✓",
+    localNoModel = "Aucun modèle importé",
+    localModelImported = "Modèle importé",
+    localImportFailed = "Échec de l'importation",
+    onbSkip = "Passer",
+    onbStart = "Commencer",
+    onbNext = "Suivant",
+    onbDone = "Terminer",
+    onbGrant = "Autoriser",
+    onbGranted = "Autorisé",
+    onbPermTitle = "Autorisations",
+    onbPermText = "FlowerNotes a besoin du micro pour vous écouter et du " +
+        "calendrier pour créer les événements. Vous pouvez aussi les accorder plus tard.",
+    onbMicPerm = "Micro — pour dicter les événements",
+    onbCalPerm = "Calendrier — pour créer les événements",
+    onbProviderTitle = "Qui interprète vos paroles ?",
+    onbGeminiDesc = "Cloud Google, gratuit avec votre clé API. Le plus simple.",
+    onbOllamaDesc = "Un serveur sur votre réseau (ex. conteneur Docker). Les données restent chez vous.",
+    onbLocalDesc = "Le modèle s'exécute sur le téléphone. Pas d'internet, confidentialité maximale.",
+    onbGeminiHow = "1. Ouvrez AI Studio avec le bouton ci-dessous\n" +
+        "2. Connectez-vous avec votre compte Google\n" +
+        "3. Touchez « Create API key » et copiez la clé\n" +
+        "4. Collez-la ci-dessous",
+    onbOpenAiStudio = "Ouvrir AI Studio",
+    onbOllamaHow = "1. Installez Ollama sur votre PC ou serveur (ollama.com)\n" +
+        "2. Téléchargez un modèle : ollama pull llama3.2\n" +
+        "3. Vérifiez que le port 11434 est joignable depuis le téléphone\n" +
+        "4. Saisissez ici l'adresse du serveur",
+    onbLocalHow = "1. Ouvrez la page du modèle avec le bouton ci-dessous\n" +
+        "2. Connectez-vous à Hugging Face (compte gratuit) et acceptez la licence Gemma\n" +
+        "3. Téléchargez le fichier gemma3-1b-it-int4.task (~550 Mo)\n" +
+        "4. Importez-le avec le bouton ci-dessous",
     calendarPickerTitle = "Calendrier de destination",
     calendarPickerHint = "Où sont créés les nouveaux événements. Avec Automatique, " +
         "le calendrier principal du compte Google est utilisé.",
@@ -647,6 +799,8 @@ val FrenchStrings = Strings(
     speechGenericError = "Erreur de reconnaissance vocale",
     llmNoKey = "Aucune clé API Gemini configurée : ajoutez-la dans les paramètres",
     llmNoOllamaUrl = "Aucune adresse de serveur Ollama configurée : ajoutez-la dans les paramètres",
+    llmNoLocalModel = "Aucun modèle local importé : ajoutez-le dans les paramètres",
+    localInferenceError = "Erreur du modèle local",
     llmInvalidResponse = "Réponse du modèle invalide : JSON introuvable",
     llmParseFailed = "Impossible d'interpréter la réponse du modèle",
     llmUnexpectedFormat = "Réponse Gemini au format inattendu",
@@ -768,9 +922,10 @@ val GermanStrings = Strings(
     ),
     providerTitle = "LLM-Anbieter",
     providerHint = "Gemini nutzt Googles Cloud mit deinem API-Schlüssel. " +
-        "Ollama nutzt einen Server in deinem eigenen Netzwerk: Keine Daten verlassen dein Zuhause.",
+        "Ollama nutzt einen Server in deinem Netzwerk. Lokal führt das Modell " +
+        "direkt auf dem Telefon aus, ganz ohne Internet.",
     providerNames = mapOf(
-        "gemini" to "Gemini", "ollama" to "Ollama",
+        "gemini" to "Gemini", "ollama" to "Ollama", "local" to "Lokal",
     ),
     ollamaHint = "Adresse deines Ollama-Servers (z. B. http://192.168.1.10:11434) " +
         "und zu verwendendes Modell. Das Telefon muss den Server erreichen können.",
@@ -782,6 +937,44 @@ val GermanStrings = Strings(
     testConnectionButton = "Verbindung testen",
     testConnectionRunning = "Prüfe…",
     testConnectionOk = "Verbindung erfolgreich ✓",
+    localTitle = "Lokales Modell",
+    localHint = "Das Modell läuft auf dem Telefon: Keine Daten verlassen das " +
+        "Gerät. Empfohlen: Gemma 3 1B int4 (~550 MB, .task-Datei). Benötigt " +
+        "ein aktuelles Telefon mit mindestens 4 GB RAM; Antworten dauern ein paar Sekunden.",
+    localDownloadButton = "Modellseite öffnen",
+    localPickButton = "Modelldatei importieren",
+    localModelConfigured = "Modell importiert ✓",
+    localNoModel = "Kein Modell importiert",
+    localModelImported = "Modell importiert",
+    localImportFailed = "Import fehlgeschlagen",
+    onbSkip = "Überspringen",
+    onbStart = "Los geht's",
+    onbNext = "Weiter",
+    onbDone = "Fertig",
+    onbGrant = "Erteilen",
+    onbGranted = "Erteilt",
+    onbPermTitle = "Berechtigungen",
+    onbPermText = "FlowerNotes braucht das Mikrofon, um dir zuzuhören, und den " +
+        "Kalender, um Termine anzulegen. Du kannst sie auch später erteilen.",
+    onbMicPerm = "Mikrofon — zum Diktieren der Termine",
+    onbCalPerm = "Kalender — zum Anlegen der Termine",
+    onbProviderTitle = "Wer interpretiert deine Worte?",
+    onbGeminiDesc = "Google-Cloud, kostenlos mit deinem API-Schlüssel. Am einfachsten.",
+    onbOllamaDesc = "Ein Server in deinem Netzwerk (z. B. Docker-Container). Daten bleiben zu Hause.",
+    onbLocalDesc = "Das Modell läuft auf dem Telefon. Kein Internet, maximale Privatsphäre.",
+    onbGeminiHow = "1. Öffne AI Studio mit dem Button unten\n" +
+        "2. Melde dich mit deinem Google-Konto an\n" +
+        "3. Tippe auf \"Create API key\" und kopiere den Schlüssel\n" +
+        "4. Füge ihn unten ein",
+    onbOpenAiStudio = "AI Studio öffnen",
+    onbOllamaHow = "1. Installiere Ollama auf deinem PC oder Server (ollama.com)\n" +
+        "2. Lade ein Modell herunter: ollama pull llama3.2\n" +
+        "3. Stelle sicher, dass Port 11434 vom Telefon erreichbar ist\n" +
+        "4. Gib hier die Serveradresse ein",
+    onbLocalHow = "1. Öffne die Modellseite mit dem Button unten\n" +
+        "2. Melde dich bei Hugging Face an (kostenlos) und akzeptiere die Gemma-Lizenz\n" +
+        "3. Lade die Datei gemma3-1b-it-int4.task herunter (~550 MB)\n" +
+        "4. Importiere sie mit dem Button unten",
     calendarPickerTitle = "Zielkalender",
     calendarPickerHint = "Wo neue Termine erstellt werden. Mit Automatisch wird " +
         "der Hauptkalender des Google-Kontos verwendet.",
@@ -819,6 +1012,8 @@ val GermanStrings = Strings(
     speechGenericError = "Fehler der Spracherkennung",
     llmNoKey = "Kein Gemini-API-Schlüssel konfiguriert: füge ihn in den Einstellungen hinzu",
     llmNoOllamaUrl = "Keine Ollama-Serveradresse konfiguriert: füge sie in den Einstellungen hinzu",
+    llmNoLocalModel = "Kein lokales Modell importiert: füge es in den Einstellungen hinzu",
+    localInferenceError = "Fehler des lokalen Modells",
     llmInvalidResponse = "Ungültige Modellantwort: JSON nicht gefunden",
     llmParseFailed = "Modellantwort konnte nicht interpretiert werden",
     llmUnexpectedFormat = "Gemini-Antwort in unerwartetem Format",
@@ -940,9 +1135,10 @@ val SpanishStrings = Strings(
     ),
     providerTitle = "Proveedor LLM",
     providerHint = "Gemini usa la nube de Google con tu clave API. " +
-        "Ollama usa un servidor en tu propia red: ningún dato sale de tu casa.",
+        "Ollama usa un servidor en tu red. Local ejecuta el modelo " +
+        "directamente en el teléfono, sin internet.",
     providerNames = mapOf(
-        "gemini" to "Gemini", "ollama" to "Ollama",
+        "gemini" to "Gemini", "ollama" to "Ollama", "local" to "Local",
     ),
     ollamaHint = "Dirección de tu servidor Ollama (ej. http://192.168.1.10:11434) " +
         "y modelo a usar. El teléfono debe poder alcanzar el servidor.",
@@ -954,6 +1150,45 @@ val SpanishStrings = Strings(
     testConnectionButton = "Probar conexión",
     testConnectionRunning = "Comprobando…",
     testConnectionOk = "Conexión correcta ✓",
+    localTitle = "Modelo local",
+    localHint = "El modelo se ejecuta en el teléfono: ningún dato sale del " +
+        "dispositivo. Recomendado: Gemma 3 1B int4 (~550 MB, archivo .task). " +
+        "Requiere un teléfono reciente con al menos 4 GB de RAM; la respuesta " +
+        "tarda unos segundos.",
+    localDownloadButton = "Abrir página del modelo",
+    localPickButton = "Importar archivo del modelo",
+    localModelConfigured = "Modelo importado ✓",
+    localNoModel = "Ningún modelo importado",
+    localModelImported = "Modelo importado",
+    localImportFailed = "Error al importar",
+    onbSkip = "Omitir",
+    onbStart = "Empezar",
+    onbNext = "Siguiente",
+    onbDone = "Listo",
+    onbGrant = "Conceder",
+    onbGranted = "Concedido",
+    onbPermTitle = "Permisos",
+    onbPermText = "FlowerNotes necesita el micrófono para escucharte y el " +
+        "calendario para crear los eventos. También puedes concederlos más tarde.",
+    onbMicPerm = "Micrófono — para dictar los eventos",
+    onbCalPerm = "Calendario — para crear los eventos",
+    onbProviderTitle = "¿Quién interpreta tus palabras?",
+    onbGeminiDesc = "Nube de Google, gratis con tu clave API. Lo más sencillo.",
+    onbOllamaDesc = "Un servidor en tu red (ej. contenedor Docker). Los datos se quedan en casa.",
+    onbLocalDesc = "El modelo se ejecuta en el teléfono. Sin internet, máxima privacidad.",
+    onbGeminiHow = "1. Abre AI Studio con el botón de abajo\n" +
+        "2. Inicia sesión con tu cuenta de Google\n" +
+        "3. Toca \"Create API key\" y copia la clave\n" +
+        "4. Pégala abajo",
+    onbOpenAiStudio = "Abrir AI Studio",
+    onbOllamaHow = "1. Instala Ollama en tu PC o servidor (ollama.com)\n" +
+        "2. Descarga un modelo: ollama pull llama3.2\n" +
+        "3. Asegúrate de que el puerto 11434 sea accesible desde el teléfono\n" +
+        "4. Introduce aquí la dirección del servidor",
+    onbLocalHow = "1. Abre la página del modelo con el botón de abajo\n" +
+        "2. Inicia sesión en Hugging Face (cuenta gratuita) y acepta la licencia Gemma\n" +
+        "3. Descarga el archivo gemma3-1b-it-int4.task (~550 MB)\n" +
+        "4. Impórtalo con el botón de abajo",
     calendarPickerTitle = "Calendario de destino",
     calendarPickerHint = "Dónde se crean los nuevos eventos. Con Automático se usa " +
         "el calendario principal de la cuenta de Google.",
@@ -991,6 +1226,8 @@ val SpanishStrings = Strings(
     speechGenericError = "Error del reconocimiento de voz",
     llmNoKey = "Ninguna clave API de Gemini configurada: añádela en los ajustes",
     llmNoOllamaUrl = "Ninguna dirección de servidor Ollama configurada: añádela en los ajustes",
+    llmNoLocalModel = "Ningún modelo local importado: añádelo en los ajustes",
+    localInferenceError = "Error del modelo local",
     llmInvalidResponse = "Respuesta del modelo no válida: JSON no encontrado",
     llmParseFailed = "No se pudo interpretar la respuesta del modelo",
     llmUnexpectedFormat = "Respuesta de Gemini en formato inesperado",

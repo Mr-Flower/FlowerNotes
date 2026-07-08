@@ -24,7 +24,7 @@ sealed interface HomeUiState {
 
 class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val extractEvent = ExtractEventUseCase(SettingsRepository(application))
+    private val extractEvent = ExtractEventUseCase(application, SettingsRepository(application))
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Idle)
     val uiState: StateFlow<HomeUiState> = _uiState

@@ -1,6 +1,7 @@
 package com.flowernotes.data
 
 import android.content.Context
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -40,6 +41,10 @@ data class Settings(
     val ollamaModel: String = OllamaProvider.DEFAULT_MODEL,
     // Calendario di destinazione; CALENDAR_AUTO = selezione automatica
     val calendarId: Long = Settings.CALENDAR_AUTO,
+    // Percorso del modello .task per il provider locale (vuoto = non importato)
+    val localModelPath: String = "",
+    // L'onboarding guidato è già stato completato o saltato?
+    val onboardingDone: Boolean = false,
     val accent: String = Accents.DYNAMIC,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     // Segue la lingua di sistema, come il tema
@@ -61,6 +66,8 @@ class SettingsRepository(private val context: Context) {
     private val ollamaUrlPref = stringPreferencesKey("ollama_url")
     private val ollamaModelPref = stringPreferencesKey("ollama_model")
     private val calendarIdPref = longPreferencesKey("calendar_id")
+    private val localModelPathPref = stringPreferencesKey("local_model_path")
+    private val onboardingDonePref = booleanPreferencesKey("onboarding_done")
     private val accentPref = stringPreferencesKey("accent_color")
     private val themeModePref = stringPreferencesKey("theme_mode")
     private val languagePref = stringPreferencesKey("app_language")
@@ -75,6 +82,8 @@ class SettingsRepository(private val context: Context) {
             ollamaUrl = prefs[ollamaUrlPref] ?: "",
             ollamaModel = prefs[ollamaModelPref] ?: OllamaProvider.DEFAULT_MODEL,
             calendarId = prefs[calendarIdPref] ?: Settings.CALENDAR_AUTO,
+            localModelPath = prefs[localModelPathPref] ?: "",
+            onboardingDone = prefs[onboardingDonePref] ?: false,
             accent = prefs[accentPref]
                 ?: if (Accents.dynamicAvailable()) Accents.DYNAMIC else Accents.OPTIONS.first().id,
             themeMode = ThemeMode.fromId(prefs[themeModePref]),
@@ -102,6 +111,14 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setCalendarId(id: Long) {
         context.settingsDataStore.edit { it[calendarIdPref] = id }
+    }
+
+    suspend fun setLocalModelPath(path: String) {
+        context.settingsDataStore.edit { it[localModelPathPref] = path }
+    }
+
+    suspend fun setOnboardingDone(done: Boolean) {
+        context.settingsDataStore.edit { it[onboardingDonePref] = done }
     }
 
     suspend fun setGeminiModel(model: String) {

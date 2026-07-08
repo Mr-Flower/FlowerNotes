@@ -18,7 +18,8 @@ open class LlmException(message: String, cause: Throwable? = null) : Exception(m
 /** Provider selezionabile nelle impostazioni */
 enum class LlmProviderType(val id: String) {
     GEMINI("gemini"),
-    OLLAMA("ollama");
+    OLLAMA("ollama"),
+    LOCAL("local");
 
     companion object {
         fun fromId(id: String?): LlmProviderType = entries.firstOrNull { it.id == id } ?: GEMINI

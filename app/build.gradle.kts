@@ -12,8 +12,15 @@ android {
         applicationId = "com.flowernotes"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "0.6.0"
+        versionCode = 7
+        versionName = "0.7.0"
+
+        // MediaPipe (LLM locale) porta librerie native pesanti per ogni ABI:
+        // limitiamo ad arm64, l'architettura di tutti i telefoni recenti
+        // (il sideload da GitHub non richiede supporto a dispositivi 32-bit)
+        ndk {
+            abiFilters += "arm64-v8a"
+        }
     }
 
     // Firma release: legge il keystore da variabili d'ambiente (usate dalla CI).
@@ -67,5 +74,8 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
+    // LLM on-device (provider "locale"): unico percorso ufficiale su Android,
+    // richiesto dall'utente per usare l'app senza cloud (modelli .task, es. Gemma 3 1B)
+    implementation(libs.mediapipe.tasks.genai)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

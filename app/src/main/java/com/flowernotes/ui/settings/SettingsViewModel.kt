@@ -14,6 +14,7 @@ import com.flowernotes.i18n.AppLanguage
 import com.flowernotes.i18n.I18n
 import com.flowernotes.llm.ExtractEventUseCase
 import com.flowernotes.llm.GeminiModels
+import com.flowernotes.llm.LocalModelImporter
 import com.flowernotes.llm.LlmProviderType
 import com.flowernotes.llm.OllamaProvider
 import com.flowernotes.ui.theme.Accents
@@ -33,7 +34,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     private val settingsRepository = SettingsRepository(application)
     private val calendarWriter = CalendarWriter(application)
-    private val extractEvent = ExtractEventUseCase(settingsRepository)
+    private val extractEvent = ExtractEventUseCase(application, settingsRepository)
+    private val modelImporter = LocalModelImporter(application)
 
     var provider by mutableStateOf(LlmProviderType.GEMINI)
         private set
@@ -45,6 +47,14 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     var ollamaUrlInput by mutableStateOf("")
     var ollamaModelInput by mutableStateOf(OllamaProvider.DEFAULT_MODEL)
     var savedOllamaUrlExists by mutableStateOf(false)
+        private set
+
+    // Modello locale on-device
+    var localModelPath by mutableStateOf("")
+        private set
+    var importingModel by mutableStateOf(false)
+        private set
+    var importProgress by mutableStateOf(0f)
         private set
     var accent by mutableStateOf(Accents.DYNAMIC)
         private set
@@ -81,6 +91,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             ollamaUrlInput = s.ollamaUrl
             ollamaModelInput = s.ollamaModel
             savedOllamaUrlExists = s.ollamaUrl.isNotBlank()
+            localModelPath = s.localModelPath
             accent = s.accent
             themeMode = s.themeMode
             language = s.language
@@ -193,6 +204,24 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 onFailure = { e -> false to e.message.orEmpty() },
             )
             testing = false
+        }
+    }
+
+    /** Copia il modello .task scelto dall'utente nello storage interno */
+    fun importLocalModel(uri: android.net.Uri) {
+        if (importingModel) return
+        importingModel = true
+        importProgress = 0f
+        viewModelScope.launch {
+            try {
+                val path = modelImporter.import(uri) { progress -> importProgress = progress }
+                settingsRepository.setLocalModelPath(path)
+                localModelPath = path
+                feedback = I18n.strings.localModelImported
+            } catch (e: Exception) {
+                feedback = "${I18n.strings.localImportFailed}: ${e.message}"
+            }
+            importingModel = false
         }
     }
 
