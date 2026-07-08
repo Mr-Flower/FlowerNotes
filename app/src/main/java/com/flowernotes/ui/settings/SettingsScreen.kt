@@ -62,6 +62,7 @@ import com.flowernotes.data.ThemeMode
 import com.flowernotes.i18n.AppLanguage
 import com.flowernotes.i18n.LocalStrings
 import com.flowernotes.llm.GeminiModels
+import com.flowernotes.llm.LlmProviderType
 import com.flowernotes.ui.theme.Accents
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -109,8 +110,13 @@ fun SettingsScreen(
 
             ThemeCard(viewModel)
             LanguageCard(viewModel)
-            ApiKeyCard(viewModel)
-            ModelCard(viewModel)
+            ProviderCard(viewModel)
+            if (viewModel.provider == LlmProviderType.GEMINI) {
+                ApiKeyCard(viewModel)
+                ModelCard(viewModel)
+            } else {
+                OllamaCard(viewModel)
+            }
             EventDefaultsCard(viewModel)
         }
     }
@@ -248,6 +254,87 @@ private fun AccentSwatch(
                 MaterialTheme.colorScheme.onSurfaceVariant
             },
         )
+    }
+}
+
+/** Scelta del provider: cloud Gemini oppure server Ollama self-hosted */
+@Composable
+private fun ProviderCard(viewModel: SettingsViewModel) {
+    val strings = LocalStrings.current
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(strings.providerTitle, style = MaterialTheme.typography.titleMedium)
+            Text(
+                strings.providerHint,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                LlmProviderType.entries.forEachIndexed { index, providerType ->
+                    SegmentedButton(
+                        selected = viewModel.provider == providerType,
+                        onClick = { viewModel.selectProvider(providerType) },
+                        shape = SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = LlmProviderType.entries.size,
+                        ),
+                    ) {
+                        Text(strings.providerNames[providerType.id] ?: providerType.id)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Indirizzo e modello del server Ollama, con salvataggio esplicito */
+@Composable
+private fun OllamaCard(viewModel: SettingsViewModel) {
+    val strings = LocalStrings.current
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(strings.providerNames["ollama"] ?: "Ollama", style = MaterialTheme.typography.titleMedium)
+            Text(
+                strings.ollamaHint,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedTextField(
+                value = viewModel.ollamaUrlInput,
+                onValueChange = { viewModel.ollamaUrlInput = it },
+                label = { Text(strings.ollamaUrlLabel) },
+                placeholder = { Text("http://192.168.1.10:11434") },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                supportingText = {
+                    Text(
+                        if (viewModel.savedOllamaUrlExists) strings.ollamaUrlConfigured
+                        else strings.ollamaNoUrlSaved
+                    )
+                },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            OutlinedTextField(
+                value = viewModel.ollamaModelInput,
+                onValueChange = { viewModel.ollamaModelInput = it },
+                label = { Text(strings.ollamaModelLabel) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Button(
+                onClick = { viewModel.saveOllama() },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(Icons.Default.Check, contentDescription = null)
+                Text(" ${strings.saveButton}")
+            }
+        }
     }
 }
 

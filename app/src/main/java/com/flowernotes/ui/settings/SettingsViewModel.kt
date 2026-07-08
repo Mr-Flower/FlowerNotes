@@ -11,6 +11,8 @@ import com.flowernotes.data.ThemeMode
 import com.flowernotes.i18n.AppLanguage
 import com.flowernotes.i18n.I18n
 import com.flowernotes.llm.GeminiModels
+import com.flowernotes.llm.LlmProviderType
+import com.flowernotes.llm.OllamaProvider
 import com.flowernotes.ui.theme.Accents
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -25,10 +27,16 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     private val settingsRepository = SettingsRepository(application)
 
+    var provider by mutableStateOf(LlmProviderType.GEMINI)
+        private set
     var apiKeyInput by mutableStateOf("")
     var savedKeyExists by mutableStateOf(false)
         private set
     var model by mutableStateOf(GeminiModels.DEFAULT)
+        private set
+    var ollamaUrlInput by mutableStateOf("")
+    var ollamaModelInput by mutableStateOf(OllamaProvider.DEFAULT_MODEL)
+    var savedOllamaUrlExists by mutableStateOf(false)
         private set
     var accent by mutableStateOf(Accents.DYNAMIC)
         private set
@@ -46,9 +54,13 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     init {
         viewModelScope.launch {
             val s = settingsRepository.settings.first()
+            provider = s.llmProvider
             apiKeyInput = s.geminiKey
             savedKeyExists = s.geminiKey.isNotBlank()
             model = s.geminiModel
+            ollamaUrlInput = s.ollamaUrl
+            ollamaModelInput = s.ollamaModel
+            savedOllamaUrlExists = s.ollamaUrl.isNotBlank()
             accent = s.accent
             themeMode = s.themeMode
             language = s.language
@@ -84,6 +96,24 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     fun selectModel(newModel: String) {
         model = newModel
         viewModelScope.launch { settingsRepository.setGeminiModel(newModel) }
+    }
+
+    fun selectProvider(newProvider: LlmProviderType) {
+        provider = newProvider
+        viewModelScope.launch { settingsRepository.setLlmProvider(newProvider) }
+    }
+
+    fun saveOllama() {
+        val url = ollamaUrlInput.trim()
+        val ollamaModel = ollamaModelInput.trim().ifBlank { OllamaProvider.DEFAULT_MODEL }
+        viewModelScope.launch {
+            settingsRepository.setOllamaUrl(url)
+            settingsRepository.setOllamaModel(ollamaModel)
+            ollamaUrlInput = url
+            ollamaModelInput = ollamaModel
+            savedOllamaUrlExists = url.isNotBlank()
+            feedback = I18n.strings.ollamaSavedFeedback
+        }
     }
 
     fun selectAccent(newAccent: String) {

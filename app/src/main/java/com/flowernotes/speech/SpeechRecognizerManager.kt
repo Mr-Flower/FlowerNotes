@@ -24,11 +24,13 @@ class SpeechRecognizerManager(
 ) {
     private var recognizer: SpeechRecognizer? = null
     private var retriedAfterDisconnect = false
+    private var cancelling = false
 
     fun isAvailable(): Boolean = SpeechRecognizer.isRecognitionAvailable(context)
 
     fun start() {
         retriedAfterDisconnect = false
+        cancelling = false
         startInternal()
     }
 
@@ -46,6 +48,9 @@ class SpeechRecognizerManager(
 
     /** Interrompe l'ascolto in corso senza distruggere il recognizer */
     fun cancel() {
+        // Dopo cancel() il recognizer può emettere un ERROR_CLIENT spurio:
+        // va ignorato, non è un errore da mostrare all'utente
+        cancelling = true
         recognizer?.cancel()
     }
 
@@ -82,6 +87,11 @@ class SpeechRecognizerManager(
         }
 
         override fun onError(error: Int) {
+            // Errore successivo a una cancellazione volontaria: silenzio
+            if (cancelling) {
+                cancelling = false
+                return
+            }
             // Il servizio si è disconnesso: ricrea il recognizer e riprova una volta
             if (error == SpeechRecognizer.ERROR_SERVER_DISCONNECTED && !retriedAfterDisconnect) {
                 retriedAfterDisconnect = true
@@ -103,6 +113,9 @@ class SpeechRecognizerManager(
     }
 
     private fun errorMessage(code: Int): String = when (code) {
+        // ERROR_CLIENT (5) capita anche quando non viene detto nulla:
+        // messaggio amichevole, non un codice numerico
+        SpeechRecognizer.ERROR_CLIENT,
         SpeechRecognizer.ERROR_NO_MATCH,
         SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> I18n.strings.speechNothingHeard
         SpeechRecognizer.ERROR_AUDIO -> I18n.strings.speechAudioError

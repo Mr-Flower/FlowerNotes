@@ -7,6 +7,8 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.flowernotes.i18n.AppLanguage
 import com.flowernotes.llm.GeminiModels
+import com.flowernotes.llm.LlmProviderType
+import com.flowernotes.llm.OllamaProvider
 import com.flowernotes.ui.theme.Accents
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -25,13 +27,16 @@ enum class ThemeMode(val id: String, val label: String) {
 }
 
 /**
- * Impostazioni dell'app. Provider unico: Google Gemini (BYOK, la key la mette
- * l'utente e resta sul dispositivo). L'interfaccia LlmProvider resta astratta
- * per eventuali provider futuri.
+ * Impostazioni dell'app. Due provider LLM: Google Gemini (BYOK, la key la
+ * mette l'utente e resta sul dispositivo) oppure un server Ollama self-hosted
+ * raggiungibile dal telefono (es. container sulla rete locale).
  */
 data class Settings(
+    val llmProvider: LlmProviderType = LlmProviderType.GEMINI,
     val geminiKey: String = "",
     val geminiModel: String = GeminiModels.DEFAULT,
+    val ollamaUrl: String = "",
+    val ollamaModel: String = OllamaProvider.DEFAULT_MODEL,
     val accent: String = Accents.DYNAMIC,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     // Inglese di default, su scelta dell'utente
@@ -42,8 +47,11 @@ data class Settings(
 
 class SettingsRepository(private val context: Context) {
 
+    private val llmProviderPref = stringPreferencesKey("llm_provider")
     private val geminiKeyPref = stringPreferencesKey("gemini_api_key")
     private val geminiModelPref = stringPreferencesKey("gemini_model")
+    private val ollamaUrlPref = stringPreferencesKey("ollama_url")
+    private val ollamaModelPref = stringPreferencesKey("ollama_model")
     private val accentPref = stringPreferencesKey("accent_color")
     private val themeModePref = stringPreferencesKey("theme_mode")
     private val languagePref = stringPreferencesKey("app_language")
@@ -52,8 +60,11 @@ class SettingsRepository(private val context: Context) {
 
     val settings: Flow<Settings> = context.settingsDataStore.data.map { prefs ->
         Settings(
+            llmProvider = LlmProviderType.fromId(prefs[llmProviderPref]),
             geminiKey = prefs[geminiKeyPref] ?: "",
             geminiModel = prefs[geminiModelPref] ?: GeminiModels.DEFAULT,
+            ollamaUrl = prefs[ollamaUrlPref] ?: "",
+            ollamaModel = prefs[ollamaModelPref] ?: OllamaProvider.DEFAULT_MODEL,
             accent = prefs[accentPref]
                 ?: if (Accents.dynamicAvailable()) Accents.DYNAMIC else Accents.OPTIONS.first().id,
             themeMode = ThemeMode.fromId(prefs[themeModePref]),
@@ -63,8 +74,20 @@ class SettingsRepository(private val context: Context) {
         )
     }
 
+    suspend fun setLlmProvider(provider: LlmProviderType) {
+        context.settingsDataStore.edit { it[llmProviderPref] = provider.id }
+    }
+
     suspend fun setGeminiKey(key: String) {
         context.settingsDataStore.edit { it[geminiKeyPref] = key }
+    }
+
+    suspend fun setOllamaUrl(url: String) {
+        context.settingsDataStore.edit { it[ollamaUrlPref] = url }
+    }
+
+    suspend fun setOllamaModel(model: String) {
+        context.settingsDataStore.edit { it[ollamaModelPref] = model }
     }
 
     suspend fun setGeminiModel(model: String) {

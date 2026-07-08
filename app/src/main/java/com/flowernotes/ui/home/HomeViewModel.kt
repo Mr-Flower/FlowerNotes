@@ -7,6 +7,8 @@ import com.flowernotes.data.EventoData
 import com.flowernotes.data.SettingsRepository
 import com.flowernotes.llm.ExtractEventUseCase
 import com.flowernotes.speech.SpeechRecognizerManager
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -27,12 +29,26 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Idle)
     val uiState: StateFlow<HomeUiState> = _uiState
 
+    private var errorAutoDismiss: Job? = null
+
     private val speech = SpeechRecognizerManager(
         context = application,
         onPartial = { partial -> _uiState.value = HomeUiState.Listening(partial) },
         onResult = { text -> extract(text) },
-        onError = { message -> _uiState.value = HomeUiState.Error(message) },
+        onError = { message -> showError(message) },
     )
+
+    /** Mostra l'errore e torna da solo a Idle dopo qualche secondo */
+    private fun showError(message: String) {
+        _uiState.value = HomeUiState.Error(message)
+        errorAutoDismiss?.cancel()
+        errorAutoDismiss = viewModelScope.launch {
+            delay(8_000)
+            if (_uiState.value is HomeUiState.Error) {
+                _uiState.value = HomeUiState.Idle
+            }
+        }
+    }
 
     fun startListening() {
         _uiState.value = HomeUiState.Listening("")
@@ -52,7 +68,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             extractEvent(text).fold(
                 onSuccess = { evento -> _uiState.value = HomeUiState.Extracted(evento) },
-                onFailure = { e -> _uiState.value = HomeUiState.Error(e.message.orEmpty()) },
+                onFailure = { e -> showError(e.message.orEmpty()) },
             )
         }
     }

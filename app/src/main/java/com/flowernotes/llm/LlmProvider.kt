@@ -12,4 +12,14 @@ interface LlmProvider {
 }
 
 /** Errore leggibile da mostrare all'utente quando la chiamata LLM fallisce */
-class LlmException(message: String, cause: Throwable? = null) : Exception(message, cause)
+open class LlmException(message: String, cause: Throwable? = null) : Exception(message, cause)
+
+/** Provider selezionabile nelle impostazioni */
+enum class LlmProviderType(val id: String) {
+    GEMINI("gemini"),
+    OLLAMA("ollama");
+
+    companion object {
+        fun fromId(id: String?): LlmProviderType = entries.firstOrNull { it.id == id } ?: GEMINI
+    }
+}

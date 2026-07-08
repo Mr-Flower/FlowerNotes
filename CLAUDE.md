@@ -25,6 +25,9 @@ Repo GitHub: `Mr-Flower/FlowerNotes` — distribuzione APK via GitHub Releases.
 - **Calendar**: `CalendarContract` (Calendar Provider di sistema) — scrive sul calendario
   dell'account Google che sincronizza da solo, senza OAuth. La Google Calendar API v3 +
   OAuth2 resta un'evoluzione futura (richiede progetto Google Cloud Console dell'utente).
+  Dopo insert/delete, `CalendarWriter` chiama `ContentResolver.requestSync`
+  (MANUAL+EXPEDITED) sull'account del calendario per ridurre la latenza di
+  sincronizzazione col cloud (2026-07-08).
 - **Persistenza locale**: DataStore Preferences (lista eventi come JSON, impostazioni, API key).
   Niente Room per ora (evita KSP).
 - **HTTP/JSON**: HttpURLConnection + org.json (built-in Android) — nessuna libreria di rete esterna
@@ -33,16 +36,20 @@ Repo GitHub: `Mr-Flower/FlowerNotes` — distribuzione APK via GitHub Releases.
 
 ## Provider LLM (architettura BYOK)
 
-**Decisione (2026-07-07)**: provider unico Google Gemini — l'utente ha chiesto di rimuovere Claude/OpenAI. L'utente fornisce la propria API key nelle impostazioni e può scegliere il modello (lista in `llm/GeminiModels.kt`, default `gemini-2.5-flash`). Nessuna key hardcoded; le key sono salvate in DataStore, solo sul dispositivo.
+**Decisione (2026-07-07)**: provider principale Google Gemini — l'utente ha chiesto di rimuovere Claude/OpenAI. L'utente fornisce la propria API key nelle impostazioni e può scegliere il modello (lista in `llm/GeminiModels.kt`, default `gemini-2.5-flash`). Nessuna key hardcoded; le key sono salvate in DataStore, solo sul dispositivo.
 
-Interfaccia comune (`llm/LlmProvider.kt`), mantenuta astratta per eventuali provider futuri:
+**Aggiunta (2026-07-08)**: secondo provider **Ollama** self-hosted (`llm/OllamaProvider.kt`) — l'utente inserisce nelle impostazioni l'indirizzo del proprio server (es. container sulla LAN, `http://ip:11434`) e il nome del modello. Usa l'endpoint nativo `/api/chat` con `stream:false` e `format:"json"`. Il manifest ha `usesCleartextTraffic="true"` per l'HTTP in chiaro sulla LAN. La scelta del provider è in `Settings.llmProvider` (enum `LlmProviderType`).
+
+Interfaccia comune (`llm/LlmProvider.kt`):
 ```kotlin
 interface LlmProvider {
     suspend fun estraiEvento(testo: String): EventoData
 }
 ```
 
-Unica implementazione: `GeminiProvider`. Il prompt condiviso è in `llm/ExtractionPrompt.kt` e richiede output JSON puro; il parsing tollera eventuali code fence.
+Il prompt condiviso è in `llm/ExtractionPrompt.kt` e richiede output JSON puro; il parsing tollera eventuali code fence.
+
+**Gestione errori (2026-07-08)**: `HttpClient` ritenta fino a 3 volte con backoff su HTTP 429/5xx (tipico il 503 "overloaded" di Gemini) e sugli errori di rete; il 503 ha un messaggio dedicato. Gli errori sulla Home tornano a Idle da soli dopo 8 secondi (`HomeViewModel.showError`). Nel riconoscimento vocale, ERROR_CLIENT (5) è mappato su "non ho sentito nulla" e gli errori successivi a un `cancel()` volontario vengono ignorati.
 
 **Nota UI (bug fix v0.2.0)**: i campi di testo che persistono su DataStore NON devono essere legati direttamente al Flow (binding bidirezionale asincrono = cursore che salta, testo che "torna indietro"). Usare stato locale nel ViewModel + salvataggio esplicito, come in `SettingsViewModel`.
 
