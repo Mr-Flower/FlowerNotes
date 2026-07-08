@@ -8,7 +8,8 @@ import com.flowernotes.data.EventoData
  * ma l'output converge sempre su EventoData.
  */
 interface LlmProvider {
-    suspend fun estraiEvento(testo: String): EventoData
+    /** Un testo può descrivere più eventi: la lista non è mai vuota */
+    suspend fun estraiEventi(testo: String): List<EventoData>
 }
 
 /** Errore leggibile da mostrare all'utente quando la chiamata LLM fallisce */

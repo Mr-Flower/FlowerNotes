@@ -6,7 +6,10 @@ import java.util.Locale
 enum class AppLanguage(val id: String) {
     SYSTEM("system"),
     ITALIAN("it"),
-    ENGLISH("en");
+    ENGLISH("en"),
+    FRENCH("fr"),
+    GERMAN("de"),
+    SPANISH("es");
 
     companion object {
         fun fromId(id: String?): AppLanguage = entries.firstOrNull { it.id == id } ?: SYSTEM
@@ -20,26 +23,49 @@ enum class AppLanguage(val id: String) {
  */
 object I18n {
     @Volatile
-    var language: AppLanguage = AppLanguage.ENGLISH
+    var language: AppLanguage = AppLanguage.SYSTEM
 
-    private val isItalian: Boolean
-        get() = when (language) {
-            AppLanguage.ITALIAN -> true
-            AppLanguage.ENGLISH -> false
-            AppLanguage.SYSTEM -> Locale.getDefault().language == "it"
+    /** SYSTEM risolto sulla lingua del dispositivo (fallback inglese) */
+    private fun resolve(language: AppLanguage): AppLanguage =
+        if (language == AppLanguage.SYSTEM) {
+            AppLanguage.entries.firstOrNull { it.id == Locale.getDefault().language }
+                ?: AppLanguage.ENGLISH
+        } else {
+            language
         }
 
+    private val effective: AppLanguage
+        get() = resolve(language)
+
     val strings: Strings
-        get() = if (isItalian) ItalianStrings else EnglishStrings
+        get() = stringsFor(effective)
 
     val locale: Locale
-        get() = if (isItalian) Locale.ITALIAN else Locale.ENGLISH
+        get() = when (effective) {
+            AppLanguage.ITALIAN -> Locale.ITALIAN
+            AppLanguage.FRENCH -> Locale.FRENCH
+            AppLanguage.GERMAN -> Locale.GERMAN
+            AppLanguage.SPANISH -> Locale("es")
+            else -> Locale.ENGLISH
+        }
 
     /** Tag lingua per lo SpeechRecognizer */
     val speechLanguageTag: String
         get() = when (language) {
+            AppLanguage.SYSTEM -> Locale.getDefault().toLanguageTag()
             AppLanguage.ITALIAN -> "it-IT"
             AppLanguage.ENGLISH -> "en-US"
-            AppLanguage.SYSTEM -> Locale.getDefault().toLanguageTag()
+            AppLanguage.FRENCH -> "fr-FR"
+            AppLanguage.GERMAN -> "de-DE"
+            AppLanguage.SPANISH -> "es-ES"
         }
+
+    /** Mappa lingua → oggetto stringhe (usata anche dalla UI Compose) */
+    fun stringsFor(language: AppLanguage): Strings = when (resolve(language)) {
+        AppLanguage.ITALIAN -> ItalianStrings
+        AppLanguage.FRENCH -> FrenchStrings
+        AppLanguage.GERMAN -> GermanStrings
+        AppLanguage.SPANISH -> SpanishStrings
+        else -> EnglishStrings
+    }
 }

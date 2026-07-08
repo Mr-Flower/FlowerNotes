@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -45,6 +46,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun ListScreen(
     onBack: () -> Unit,
+    onEdit: (SavedEvent) -> Unit,
     viewModel: ListViewModel = viewModel(),
 ) {
     val strings = LocalStrings.current
@@ -96,6 +98,7 @@ fun ListScreen(
                                 // nessuna app calendario disponibile: ignora
                             }
                         },
+                        onEdit = { onEdit(event) },
                         onDelete = { viewModel.delete(event) },
                     )
                 }
@@ -108,6 +111,7 @@ fun ListScreen(
 private fun EventListCard(
     event: SavedEvent,
     onOpen: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
     val strings = LocalStrings.current
@@ -128,6 +132,14 @@ private fun EventListCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (event.ricorrenza.isNotBlank()) {
+                    Icon(
+                        Icons.Default.Repeat,
+                        contentDescription = strings.fieldRecurrence,
+                        modifier = Modifier.padding(start = 6.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
             if (event.luogo.isNotBlank()) {
                 Spacer(Modifier.height(2.dp))
@@ -150,6 +162,7 @@ private fun EventListCard(
                 horizontalArrangement = Arrangement.End,
             ) {
                 TextButton(onClick = onOpen) { Text(strings.openButton) }
+                TextButton(onClick = onEdit) { Text(strings.editButton) }
                 TextButton(onClick = onDelete) {
                     Text(strings.deleteButton, color = MaterialTheme.colorScheme.error)
                 }

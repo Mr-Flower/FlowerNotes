@@ -67,7 +67,7 @@ import kotlin.random.Random
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    onEventExtracted: (EventoData) -> Unit,
+    onEventExtracted: (List<EventoData>) -> Unit,
     onOpenManual: () -> Unit,
     onOpenList: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -82,7 +82,7 @@ fun HomeScreen(
         val state = uiState
         if (state is HomeUiState.Extracted) {
             viewModel.reset()
-            onEventExtracted(state.evento)
+            onEventExtracted(state.eventi)
         }
     }
 
@@ -124,16 +124,16 @@ fun HomeScreen(
         val isListening = uiState is HomeUiState.Listening
         val isProcessing = uiState is HomeUiState.Processing || uiState is HomeUiState.Extracted
 
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // In alto solo il nome dell'app con la didascalia
             Column(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
                     .fillMaxWidth()
                     .padding(top = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -153,7 +153,11 @@ fun HomeScreen(
                 )
             }
 
-            // Microfono al centro, con i testi di stato subito sotto.
+            // Lo spazio vuoto è distribuito con i pesi: metà sopra il
+            // microfono, metà tra i testi di stato e i bottoni in basso
+            Spacer(Modifier.weight(1f))
+
+            // Microfono con i testi di stato sotto.
             // Mentre ascolta, onde concentriche che si propagano sfumando.
             val waveColor = MaterialTheme.colorScheme.primary
             val waveTransition = rememberInfiniteTransition(label = "waves")
@@ -170,9 +174,7 @@ fun HomeScreen(
                 )
             }
             Column(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Box(
@@ -221,7 +223,8 @@ fun HomeScreen(
                     }
                 }
 
-                Spacer(Modifier.height(28.dp))
+                // Più respiro tra il microfono (con le sue onde) e i testi
+                Spacer(Modifier.height(56.dp))
 
                 // Area di stato ad altezza fissa: il microfono non si sposta
                 // quando i testi cambiano
@@ -304,10 +307,11 @@ fun HomeScreen(
                 }
             }
 
+            Spacer(Modifier.weight(1f))
+
             // Azioni secondarie in basso, stile quick tile di Android
             Row(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .padding(bottom = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),

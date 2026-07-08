@@ -37,19 +37,21 @@ import com.flowernotes.i18n.LocalStrings
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManualScreen(
-    onEventExtracted: (EventoData) -> Unit,
+    onEventExtracted: (List<EventoData>) -> Unit,
     onBack: () -> Unit,
+    initialText: String = "",
     viewModel: ManualViewModel = viewModel(),
 ) {
     val strings = LocalStrings.current
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var text by rememberSaveable { mutableStateOf("") }
+    // initialText: testo condiviso da un'altra app (ACTION_SEND)
+    var text by rememberSaveable { mutableStateOf(initialText) }
 
     LaunchedEffect(uiState) {
         val state = uiState
         if (state is ManualUiState.Extracted) {
             viewModel.reset()
-            onEventExtracted(state.evento)
+            onEventExtracted(state.eventi)
         }
     }
 

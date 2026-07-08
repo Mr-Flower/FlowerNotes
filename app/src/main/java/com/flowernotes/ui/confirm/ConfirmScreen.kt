@@ -34,19 +34,28 @@ import com.flowernotes.data.EventoData
 import com.flowernotes.i18n.LocalStrings
 
 /**
- * Schermata di conferma/modifica dell'evento estratto.
- * Usata sia dal flusso vocale che da quello manuale (stessa card EventoCard).
+ * Schermata di conferma/modifica. In creazione mostra una card per ciascun
+ * evento estratto dal testo (possono essere più d'uno); in modifica carica
+ * l'evento dal calendario e ne mostra una sola.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ConfirmScreen(
-    initialEvento: EventoData,
+    initialEventi: List<EventoData>,
+    editEventId: Long?,
     onSaved: () -> Unit,
     onCancel: () -> Unit,
     viewModel: ConfirmViewModel = viewModel(),
 ) {
     val strings = LocalStrings.current
-    viewModel.load(initialEvento)
+    // Una sola volta, non a ogni ricomposizione
+    LaunchedEffect(Unit) {
+        if (editEventId != null) {
+            viewModel.loadEdit(editEventId)
+        } else {
+            viewModel.loadNew(initialEventi)
+        }
+    }
     val uiState = viewModel.uiState
 
     LaunchedEffect(uiState) {
@@ -67,7 +76,15 @@ fun ConfirmScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(strings.confirmTitle) },
+                title = {
+                    Text(
+                        when {
+                            viewModel.isEditMode -> strings.confirmEditTitle
+                            viewModel.eventi.size > 1 -> strings.confirmTitleMulti
+                            else -> strings.confirmTitle
+                        }
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onCancel) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.cancel)
@@ -85,7 +102,20 @@ fun ConfirmScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            EventoCard(viewModel = viewModel, enabled = uiState !is ConfirmUiState.Saving)
+            if (uiState is ConfirmUiState.Loading) {
+                CircularProgressIndicator()
+                return@Column
+            }
+
+            viewModel.eventi.forEachIndexed { index, fields ->
+                EventoCard(
+                    fields = fields,
+                    enabled = uiState !is ConfirmUiState.Saving,
+                    onRemove = if (viewModel.eventi.size > 1) {
+                        { viewModel.removeAt(index) }
+                    } else null,
+                )
+            }
 
             if (uiState is ConfirmUiState.Error) {
                 Text(
@@ -132,7 +162,7 @@ fun ConfirmScreen(
                     modifier = Modifier
                         .weight(1f)
                         .height(48.dp),
-                    enabled = uiState !is ConfirmUiState.Saving,
+                    enabled = uiState !is ConfirmUiState.Saving && viewModel.eventi.isNotEmpty(),
                 ) {
                     Text(strings.saveButton, maxLines = 1)
                 }

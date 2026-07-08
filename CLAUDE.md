@@ -71,7 +71,8 @@ Il prompt condiviso è in `llm/ExtractionPrompt.kt` e richiede output JSON puro;
   vivono in `i18n/Strings.kt` (ItalianStrings/EnglishStrings), fornite ai composable
   via `LocalStrings`; il codice non-Compose (speech, LLM, calendario) usa il
   singleton `I18n`, che MainActivity tiene allineato alle impostazioni.
-  **Default: inglese.** La lingua guida anche SpeechRecognizer e prompt Gemini.
+  **Default: lingua di sistema** (deciso 2026-07-08; prima era inglese).
+  La lingua guida anche SpeechRecognizer e prompt del modello.
 - Logica di estrazione condivisa in `llm/ExtractEventUseCase` (usata da Home e Manuale)
 
 ## CI/CD e release
@@ -83,11 +84,10 @@ Il prompt condiviso è in `llm/ExtractionPrompt.kt` e richiede output JSON puro;
 - Per rilasciare: aggiornare `versionCode`/`versionName` in `app/build.gradle.kts`, poi
   `git tag vX.Y.Z && git push --tags`
 - Minify (R8) disattivato nella v0.x: riattivarlo più avanti con test su dispositivo
-- **Processo attuale (dal 2026-07-07, su richiesta dell'utente)**: si itera
-  ripubblicando sempre la release **v0.5.0** (eliminare release+tag con
-  `gh release delete v0.5.0 -y --cleanup-tag`, poi ritaggare e pushare) finché
-  l'utente non dichiara chiusa questa fase. **Chiedere SEMPRE conferma
-  all'utente prima di pushare/ripubblicare una release.**
+- **Processo release**: la fase "si itera ripubblicando v0.5.0" è stata chiusa
+  il 2026-07-08 con la pubblicazione della v0.6.0; da qui in poi ogni release
+  è un tag nuovo con versionCode/versionName incrementati. **Chiedere SEMPRE
+  conferma all'utente prima di pushare/pubblicare una release.**
 - Licenza: MIT (file LICENSE, mostrata anche nella pagina Info dell'app)
 
 ## Ambiente di sviluppo

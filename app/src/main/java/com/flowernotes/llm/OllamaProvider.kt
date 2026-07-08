@@ -26,7 +26,7 @@ class OllamaProvider(
         if (it.startsWith("http://") || it.startsWith("https://")) it else "http://$it"
     }
 
-    override suspend fun estraiEvento(testo: String): EventoData {
+    override suspend fun estraiEventi(testo: String): List<EventoData> {
         val body = JSONObject().apply {
             put("model", model)
             put("messages", JSONArray().put(

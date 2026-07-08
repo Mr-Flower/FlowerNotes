@@ -14,7 +14,7 @@ import kotlinx.coroutines.launch
 sealed interface ManualUiState {
     data object Idle : ManualUiState
     data object Processing : ManualUiState
-    data class Extracted(val evento: EventoData) : ManualUiState
+    data class Extracted(val eventi: List<EventoData>) : ManualUiState
     data class Error(val message: String) : ManualUiState
 }
 
@@ -33,7 +33,7 @@ class ManualViewModel(application: Application) : AndroidViewModel(application) 
         _uiState.value = ManualUiState.Processing
         viewModelScope.launch {
             extractEvent(text).fold(
-                onSuccess = { evento -> _uiState.value = ManualUiState.Extracted(evento) },
+                onSuccess = { eventi -> _uiState.value = ManualUiState.Extracted(eventi) },
                 onFailure = { e -> _uiState.value = ManualUiState.Error(e.message.orEmpty()) },
             )
         }

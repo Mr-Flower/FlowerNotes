@@ -3,6 +3,7 @@ package com.flowernotes.data
 import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.flowernotes.i18n.AppLanguage
@@ -37,13 +38,20 @@ data class Settings(
     val geminiModel: String = GeminiModels.DEFAULT,
     val ollamaUrl: String = "",
     val ollamaModel: String = OllamaProvider.DEFAULT_MODEL,
+    // Calendario di destinazione; CALENDAR_AUTO = selezione automatica
+    val calendarId: Long = Settings.CALENDAR_AUTO,
     val accent: String = Accents.DYNAMIC,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
-    // Inglese di default, su scelta dell'utente
-    val language: AppLanguage = AppLanguage.ENGLISH,
+    // Segue la lingua di sistema, come il tema
+    val language: AppLanguage = AppLanguage.SYSTEM,
     val defaultDurationMinutes: Int = 60,
     val defaultReminderMinutes: Int = 60,
-)
+) {
+    companion object {
+        /** Valore "automatico" per il calendario di destinazione */
+        const val CALENDAR_AUTO = -1L
+    }
+}
 
 class SettingsRepository(private val context: Context) {
 
@@ -52,6 +60,7 @@ class SettingsRepository(private val context: Context) {
     private val geminiModelPref = stringPreferencesKey("gemini_model")
     private val ollamaUrlPref = stringPreferencesKey("ollama_url")
     private val ollamaModelPref = stringPreferencesKey("ollama_model")
+    private val calendarIdPref = longPreferencesKey("calendar_id")
     private val accentPref = stringPreferencesKey("accent_color")
     private val themeModePref = stringPreferencesKey("theme_mode")
     private val languagePref = stringPreferencesKey("app_language")
@@ -65,10 +74,11 @@ class SettingsRepository(private val context: Context) {
             geminiModel = prefs[geminiModelPref] ?: GeminiModels.DEFAULT,
             ollamaUrl = prefs[ollamaUrlPref] ?: "",
             ollamaModel = prefs[ollamaModelPref] ?: OllamaProvider.DEFAULT_MODEL,
+            calendarId = prefs[calendarIdPref] ?: Settings.CALENDAR_AUTO,
             accent = prefs[accentPref]
                 ?: if (Accents.dynamicAvailable()) Accents.DYNAMIC else Accents.OPTIONS.first().id,
             themeMode = ThemeMode.fromId(prefs[themeModePref]),
-            language = prefs[languagePref]?.let { AppLanguage.fromId(it) } ?: AppLanguage.ENGLISH,
+            language = AppLanguage.fromId(prefs[languagePref]),
             defaultDurationMinutes = prefs[defaultDurationPref] ?: 60,
             defaultReminderMinutes = prefs[defaultReminderPref] ?: 60,
         )
@@ -88,6 +98,10 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setOllamaModel(model: String) {
         context.settingsDataStore.edit { it[ollamaModelPref] = model }
+    }
+
+    suspend fun setCalendarId(id: Long) {
+        context.settingsDataStore.edit { it[calendarIdPref] = id }
     }
 
     suspend fun setGeminiModel(model: String) {

@@ -1,5 +1,9 @@
 package com.flowernotes.ui.settings
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -50,6 +54,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -57,7 +62,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.flowernotes.data.Settings
 import com.flowernotes.data.ThemeMode
 import com.flowernotes.i18n.AppLanguage
 import com.flowernotes.i18n.LocalStrings
@@ -117,6 +124,7 @@ fun SettingsScreen(
             } else {
                 OllamaCard(viewModel)
             }
+            CalendarCard(viewModel)
             EventDefaultsCard(viewModel)
         }
     }
@@ -181,6 +189,7 @@ private fun ThemeCard(viewModel: SettingsViewModel) {
 }
 
 /** Lingua dell'app (vale anche per riconoscimento vocale e prompt del modello) */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun LanguageCard(viewModel: SettingsViewModel) {
     val strings = LocalStrings.current
@@ -190,17 +199,36 @@ private fun LanguageCard(viewModel: SettingsViewModel) {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(strings.languageTitle, style = MaterialTheme.typography.titleMedium)
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                AppLanguage.entries.forEachIndexed { index, language ->
-                    SegmentedButton(
-                        selected = viewModel.language == language,
-                        onClick = { viewModel.selectLanguage(language) },
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = index,
-                            count = AppLanguage.entries.size,
-                        ),
-                    ) {
-                        Text(strings.languageNames[language.id] ?: language.id)
+            // Con sei lingue i segmented button non ci stanno più: dropdown
+            var expanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it },
+            ) {
+                OutlinedTextField(
+                    value = strings.languageNames[viewModel.language.id] ?: viewModel.language.id,
+                    onValueChange = {},
+                    readOnly = true,
+                    singleLine = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                ) {
+                    AppLanguage.entries.forEach { language ->
+                        DropdownMenuItem(
+                            text = { Text(strings.languageNames[language.id] ?: language.id) },
+                            onClick = {
+                                viewModel.selectLanguage(language)
+                                expanded = false
+                            },
+                        )
                     }
                 }
             }
@@ -290,6 +318,33 @@ private fun ProviderCard(viewModel: SettingsViewModel) {
     }
 }
 
+/** Pulsante "Prova connessione" con esito, riusato dalle card Gemini e Ollama */
+@Composable
+private fun TestConnectionRow(viewModel: SettingsViewModel) {
+    val strings = LocalStrings.current
+    OutlinedButton(
+        onClick = { viewModel.testConnection() },
+        enabled = !viewModel.testing,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Text(
+            if (viewModel.testing) strings.testConnectionRunning
+            else strings.testConnectionButton
+        )
+    }
+    viewModel.testResult?.let { (ok, message) ->
+        Text(
+            message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = if (ok) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.error
+            },
+        )
+    }
+}
+
 /** Indirizzo e modello del server Ollama, con salvataggio esplicito */
 @Composable
 private fun OllamaCard(viewModel: SettingsViewModel) {
@@ -334,6 +389,7 @@ private fun OllamaCard(viewModel: SettingsViewModel) {
                 Icon(Icons.Default.Check, contentDescription = null)
                 Text(" ${strings.saveButton}")
             }
+            TestConnectionRow(viewModel)
         }
     }
 }
@@ -397,6 +453,7 @@ private fun ApiKeyCard(viewModel: SettingsViewModel) {
                     Text(" ${strings.removeButton}")
                 }
             }
+            TestConnectionRow(viewModel)
         }
     }
 }
@@ -451,6 +508,106 @@ private fun ModelCard(viewModel: SettingsViewModel) {
                             },
                             onClick = {
                                 viewModel.selectModel(id)
+                                expanded = false
+                            },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Calendario di destinazione dei nuovi eventi. L'elenco richiede il permesso
+ * READ_CALENDAR: finché manca, la card mostra il pulsante per concederlo.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun CalendarCard(viewModel: SettingsViewModel) {
+    val strings = LocalStrings.current
+    val context = LocalContext.current
+    var hasPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.READ_CALENDAR) ==
+                PackageManager.PERMISSION_GRANTED
+        )
+    }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted -> hasPermission = granted }
+
+    LaunchedEffect(hasPermission) {
+        if (hasPermission) viewModel.loadCalendars()
+    }
+
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(strings.calendarPickerTitle, style = MaterialTheme.typography.titleMedium)
+            Text(
+                strings.calendarPickerHint,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (!hasPermission) {
+                OutlinedButton(
+                    onClick = { permissionLauncher.launch(Manifest.permission.READ_CALENDAR) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(strings.grantPermissionButton)
+                }
+                return@Column
+            }
+
+            var expanded by remember { mutableStateOf(false) }
+            val selected = viewModel.calendars.firstOrNull { it.id == viewModel.calendarId }
+            val label = selected?.name ?: strings.calendarAutomatic
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it },
+            ) {
+                OutlinedTextField(
+                    value = label,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(strings.calendarPickerTitle) },
+                    singleLine = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                    },
+                    supportingText = selected?.let { { Text(it.account) } },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false },
+                ) {
+                    DropdownMenuItem(
+                        text = { Text(strings.calendarAutomatic) },
+                        onClick = {
+                            viewModel.selectCalendar(Settings.CALENDAR_AUTO)
+                            expanded = false
+                        },
+                    )
+                    viewModel.calendars.forEach { calendar ->
+                        DropdownMenuItem(
+                            text = {
+                                Column {
+                                    Text(calendar.name, style = MaterialTheme.typography.bodyLarge)
+                                    Text(
+                                        calendar.account,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    )
+                                }
+                            },
+                            onClick = {
+                                viewModel.selectCalendar(calendar.id)
                                 expanded = false
                             },
                         )

@@ -6,15 +6,15 @@ import com.flowernotes.i18n.I18n
 import kotlinx.coroutines.flow.first
 
 /**
- * Estrazione testo → EventoData, condivisa tra flusso vocale e manuale.
+ * Estrazione testo → lista di EventoData, condivisa tra flusso vocale e manuale.
  * Converte ogni errore in una LlmException con messaggio localizzato.
  */
 class ExtractEventUseCase(private val settingsRepository: SettingsRepository) {
 
-    suspend operator fun invoke(text: String): Result<EventoData> = try {
+    suspend operator fun invoke(text: String): Result<List<EventoData>> = try {
         val settings = settingsRepository.settings.first()
         val provider = LlmProviderFactory.create(settings)
-        Result.success(provider.estraiEvento(text))
+        Result.success(provider.estraiEventi(text))
     } catch (e: LlmException) {
         Result.failure(e)
     } catch (e: Exception) {

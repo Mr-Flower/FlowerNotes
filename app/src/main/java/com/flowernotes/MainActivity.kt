@@ -25,6 +25,10 @@ class MainActivity : ComponentActivity() {
     // Incrementato ogni volta che il Quick Tile chiede di partire in ascolto
     private var listenTrigger by mutableIntStateOf(0)
 
+    // Testo ricevuto via ACTION_SEND (condivisione da altre app)
+    private var sharedTextTrigger by mutableIntStateOf(0)
+    private var sharedText = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -46,7 +50,11 @@ class MainActivity : ComponentActivity() {
             }
             CompositionLocalProvider(LocalStrings provides strings) {
                 FlowerNotesTheme(darkTheme = darkTheme, accent = settings.accent) {
-                    FlowerNotesApp(startListenTrigger = listenTrigger)
+                    FlowerNotesApp(
+                        startListenTrigger = listenTrigger,
+                        sharedTextTrigger = sharedTextTrigger,
+                        sharedText = sharedText,
+                    )
                 }
             }
         }
@@ -61,6 +69,14 @@ class MainActivity : ComponentActivity() {
         if (intent?.getBooleanExtra(EXTRA_START_LISTENING, false) == true) {
             intent.removeExtra(EXTRA_START_LISTENING)
             listenTrigger++
+        }
+        // Testo condiviso da un'altra app: apre l'inserimento manuale precompilato
+        if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
+            val text = intent.getStringExtra(Intent.EXTRA_TEXT).orEmpty()
+            if (text.isNotBlank()) {
+                sharedText = text
+                sharedTextTrigger++
+            }
         }
     }
 

@@ -12,7 +12,7 @@ class GeminiProvider(
     private val reminderDefault: Int = 60,
 ) : LlmProvider {
 
-    override suspend fun estraiEvento(testo: String): EventoData {
+    override suspend fun estraiEventi(testo: String): List<EventoData> {
         val body = JSONObject().apply {
             put("contents", JSONArray().put(
                 JSONObject().put("parts", JSONArray().put(

@@ -6,16 +6,22 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.flowernotes.calendar.CalendarWriter
+import com.flowernotes.data.Settings
 import com.flowernotes.data.SettingsRepository
 import com.flowernotes.data.ThemeMode
 import com.flowernotes.i18n.AppLanguage
 import com.flowernotes.i18n.I18n
+import com.flowernotes.llm.ExtractEventUseCase
 import com.flowernotes.llm.GeminiModels
 import com.flowernotes.llm.LlmProviderType
 import com.flowernotes.llm.OllamaProvider
 import com.flowernotes.ui.theme.Accents
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.Locale
 
 /**
  * I campi di testo usano stato locale e salvataggio esplicito: il binding
@@ -26,6 +32,8 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
 
     private val settingsRepository = SettingsRepository(application)
+    private val calendarWriter = CalendarWriter(application)
+    private val extractEvent = ExtractEventUseCase(settingsRepository)
 
     var provider by mutableStateOf(LlmProviderType.GEMINI)
         private set
@@ -42,13 +50,25 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         private set
     var themeMode by mutableStateOf(ThemeMode.SYSTEM)
         private set
-    var language by mutableStateOf(AppLanguage.ENGLISH)
+    var language by mutableStateOf(AppLanguage.SYSTEM)
         private set
     var durationInput by mutableStateOf("60")
     var reminderInput by mutableStateOf("60")
     var loaded by mutableStateOf(false)
         private set
     var feedback by mutableStateOf<String?>(null)
+        private set
+
+    // Prova connessione al provider LLM
+    var testing by mutableStateOf(false)
+        private set
+    var testResult by mutableStateOf<Pair<Boolean, String>?>(null) // ok? + messaggio
+        private set
+
+    // Selettore del calendario di destinazione
+    var calendars by mutableStateOf<List<CalendarWriter.CalendarInfo>>(emptyList())
+        private set
+    var calendarId by mutableStateOf(Settings.CALENDAR_AUTO)
         private set
 
     init {
@@ -66,6 +86,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             language = s.language
             durationInput = s.defaultDurationMinutes.toString()
             reminderInput = s.defaultReminderMinutes.toString()
+            calendarId = s.calendarId
             loaded = true
         }
     }
@@ -147,6 +168,44 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
                 viewModelScope.launch { settingsRepository.setDefaultReminder(minutes) }
             }
         }
+    }
+
+    /**
+     * Prova end-to-end del provider configurato (key/URL salvati): manda un
+     * testo di esempio attraverso la stessa pipeline usata da Home e Manuale.
+     */
+    fun testConnection() {
+        if (testing) return
+        testing = true
+        testResult = null
+        viewModelScope.launch {
+            val startMillis = System.currentTimeMillis()
+            val sample = if (I18n.locale.language == Locale.ITALIAN.language) {
+                "riunione di prova domani alle 10"
+            } else {
+                "test meeting tomorrow at 10"
+            }
+            testResult = extractEvent(sample).fold(
+                onSuccess = {
+                    val seconds = (System.currentTimeMillis() - startMillis) / 1000.0
+                    true to "${I18n.strings.testConnectionOk} (%.1f s)".format(seconds)
+                },
+                onFailure = { e -> false to e.message.orEmpty() },
+            )
+            testing = false
+        }
+    }
+
+    /** Carica i calendari scrivibili (richiede il permesso READ_CALENDAR) */
+    fun loadCalendars() {
+        viewModelScope.launch {
+            calendars = withContext(Dispatchers.IO) { calendarWriter.listWritableCalendars() }
+        }
+    }
+
+    fun selectCalendar(id: Long) {
+        calendarId = id
+        viewModelScope.launch { settingsRepository.setCalendarId(id) }
     }
 
     fun consumeFeedback(): String? = feedback.also { feedback = null }

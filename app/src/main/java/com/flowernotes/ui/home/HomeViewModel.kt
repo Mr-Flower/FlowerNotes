@@ -18,7 +18,7 @@ sealed interface HomeUiState {
     data object Idle : HomeUiState
     data class Listening(val partialText: String) : HomeUiState
     data class Processing(val recognizedText: String) : HomeUiState
-    data class Extracted(val evento: EventoData) : HomeUiState
+    data class Extracted(val eventi: List<EventoData>) : HomeUiState
     data class Error(val message: String) : HomeUiState
 }
 
@@ -67,7 +67,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value = HomeUiState.Processing(text)
         viewModelScope.launch {
             extractEvent(text).fold(
-                onSuccess = { evento -> _uiState.value = HomeUiState.Extracted(evento) },
+                onSuccess = { eventi -> _uiState.value = HomeUiState.Extracted(eventi) },
                 onFailure = { e -> showError(e.message.orEmpty()) },
             )
         }

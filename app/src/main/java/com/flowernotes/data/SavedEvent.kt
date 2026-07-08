@@ -10,6 +10,7 @@ data class SavedEvent(
     val ora: String,         // HH:mm
     val luogo: String,
     val createdAtMillis: Long,
+    val ricorrenza: String = "",
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("id", id)
@@ -18,6 +19,7 @@ data class SavedEvent(
         put("ora", ora)
         put("luogo", luogo)
         put("createdAtMillis", createdAtMillis)
+        put("ricorrenza", ricorrenza)
     }
 
     companion object {
@@ -28,6 +30,7 @@ data class SavedEvent(
             ora = o.optString("ora", ""),
             luogo = o.optString("luogo", ""),
             createdAtMillis = o.optLong("createdAtMillis", 0L),
+            ricorrenza = o.optString("ricorrenza", ""),
         )
     }
 }

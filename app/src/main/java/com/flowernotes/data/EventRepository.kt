@@ -22,9 +22,21 @@ class EventRepository(private val context: Context) {
         parse(prefs[eventsKey] ?: "[]")
     }
 
-    suspend fun add(event: SavedEvent) {
+    suspend fun addAll(events: List<SavedEvent>) {
+        if (events.isEmpty()) return
         context.eventsDataStore.edit { prefs ->
-            val list = parse(prefs[eventsKey] ?: "[]") + event
+            val list = parse(prefs[eventsKey] ?: "[]") + events
+            prefs[eventsKey] = serialize(list)
+        }
+    }
+
+    /** Sostituisce l'evento con lo stesso id (usato dalla modifica),
+     *  conservando la data di creazione originale per l'ordinamento */
+    suspend fun update(event: SavedEvent) {
+        context.eventsDataStore.edit { prefs ->
+            val list = parse(prefs[eventsKey] ?: "[]").map {
+                if (it.id == event.id) event.copy(createdAtMillis = it.createdAtMillis) else it
+            }
             prefs[eventsKey] = serialize(list)
         }
     }
